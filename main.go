@@ -15,6 +15,11 @@ func main() {
 	var c Client
 
 	flag.Parse()
+	if *token == "" {
+		fmt.Fprintf(os.Stderr, "usage: droplet -t YOUR_API_TOKEN\n")
+		os.Exit(1)
+	}
+
 	if err := c.open(*token); err != nil {
 		log.Fatal(err)
 	}
