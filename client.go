@@ -9,13 +9,13 @@ import (
 	"github.com/digitalocean/godo"
 )
 
-type Client struct{
+type Client struct {
 	token string
 	do    *godo.Client
 }
 
 func (c *Client) Token() (*oauth2.Token, error) {
-	token := &oauth2.Token{ AccessToken: c.token }
+	token := &oauth2.Token{AccessToken: c.token}
 	return token, nil
 }
 
