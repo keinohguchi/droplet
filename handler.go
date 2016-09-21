@@ -13,8 +13,16 @@ func handle(c *Client, cmd string) error {
 			return err
 		}
 		fmt.Printf("%s: %v\n", cmd, acct)
-		return nil
+	case "list":
+		droplets, err := list(c)
+		if err != nil {
+			return err
+		}
+		for i, d := range droplets {
+			fmt.Printf("%d: %v, %v\n", i + 1, d.Name, d.Image.Slug)
+		}
 	default:
 		return fmt.Errorf("%q: not supported", cmd)
 	}
+	return nil
 }
