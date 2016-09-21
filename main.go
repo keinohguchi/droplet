@@ -27,7 +27,7 @@ func main() {
 	// Simple command handler.
 	input := bufio.NewScanner(os.Stdin)
 	for prompt(os.Stdout); input.Scan(); prompt(os.Stdout) {
-		if err := c.handle(input.Text()); err != nil {
+		if err := handle(&c, input.Text()); err != nil {
 			log.Fatal(err)
 		}
 	}
