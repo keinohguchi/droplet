@@ -8,19 +8,17 @@ import (
 )
 
 type client struct{
-	AccessToken string
-	c           *godo.Client
+	token string
+	c     *godo.Client
 }
 
 func (c *client) Token() (*oauth2.Token, error) {
-	token := &oauth2.Token{
-		AccessToken: c.AccessToken,
-	}
+	token := &oauth2.Token{ AccessToken: c.token }
 	return token, nil
 }
 
 func (c *client) open(token string) error {
-	c.AccessToken = token
+	c.token = token
 	oauthClient := oauth2.NewClient(oauth2.NoContext, c)
 	c.c = godo.NewClient(oauthClient)
 	return nil
