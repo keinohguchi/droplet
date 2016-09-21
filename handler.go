@@ -7,8 +7,8 @@ import (
 
 func handle(c *Client, cmd string) error {
 	switch cmd {
-	case "account":
-		acct, err := account(c)
+	case "setting":
+		acct, err := setting(c)
 		if err != nil {
 			return err
 		}
