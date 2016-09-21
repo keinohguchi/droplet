@@ -28,7 +28,7 @@ func main() {
 	input := bufio.NewScanner(os.Stdin)
 	for prompt(os.Stdout); input.Scan(); prompt(os.Stdout) {
 		if err := handle(&c, input.Text()); err != nil {
-			log.Fatal(err)
+			fmt.Fprintf(os.Stdout, "%v\n", err)
 		}
 	}
 }
