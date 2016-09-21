@@ -1,21 +1,34 @@
 package main
 
 import (
+	"bufio"
 	"flag"
 	"fmt"
+	"io"
 	"log"
+	"os"
 )
 
 var token = flag.String("t", "", "DO APIv2 access token")
 
 func main() {
-	var c client
+	var c Client
 
 	flag.Parse()
-	c.open(*token)
-	account, _, err := c.c.Account.Get()
-	if err != nil {
+	if err := c.open(*token); err != nil {
 		log.Fatal(err)
 	}
-	fmt.Println(account)
+
+	// Simple command handler.
+	input := bufio.NewScanner(os.Stdin)
+	for prompt(os.Stdout); input.Scan(); prompt(os.Stdout) {
+		if err := c.handle(input.Text()); err != nil {
+			log.Fatal(err)
+		}
+	}
+}
+
+func prompt(out io.Writer) {
+	const prompt = "Droplet"
+	fmt.Fprintf(out, "%s> ", prompt)
 }
