@@ -13,8 +13,9 @@ type request struct {
 }
 
 type reply struct {
-	status string
-	args   []string
+	cmd  string
+	args []string
+	err  error
 }
 
 const (
@@ -72,7 +73,11 @@ func main() {
 				return
 			}
 			go func() {
-				outputs <- reply.args
+				if reply.err != nil {
+					outputs <- []string{reply.err.Error()}
+				} else {
+					outputs <- reply.args
+				}
 			}()
 		case <-abort:
 			return

@@ -38,11 +38,7 @@ func (s *Server) loop(n *sync.WaitGroup) {
 				log.Printf("server: requests channel closed\n")
 				return
 			}
-			log.Print(req)
-			reply := reply{status: "good", args: req.args}
-			go func() {
-				replies <- &reply
-			}()
+			s.handle(req)
 		case <-abort:
 			log.Printf("server: aborting...\n")
 			for range requests {
@@ -51,5 +47,21 @@ func (s *Server) loop(n *sync.WaitGroup) {
 			log.Printf("server: requests channel is clean\n")
 			return
 		}
+	}
+}
+
+func (s *Server) handle(req *request) {
+	switch req.cmd {
+	case "setting":
+		go func() {
+			acct, err := setting(s)
+			log.Print(acct)
+			replies <- &reply{cmd: req.cmd, args: req.args, err: err}
+		}()
+	default:
+		go func() {
+			log.Print(req)
+			replies <- &reply{cmd: req.cmd, args: req.args, err: nil}
+		}()
 	}
 }
