@@ -9,9 +9,13 @@ import (
 	"sync"
 )
 
+const (
+	prompt = "droplet> "
+)
+
 func clientHandler(in io.ReadCloser, out io.Writer, n *sync.WaitGroup) {
 	defer n.Done()
-	prompt := func(w io.Writer) { fmt.Fprintf(w, "%s$ ", prompt) }
+	prompt := func(w io.Writer) { fmt.Fprint(w, prompt) }
 	input := bufio.NewScanner(in)
 	for prompt(out); input.Scan(); prompt(out) {
 		args := strings.Split(input.Text(), " ")

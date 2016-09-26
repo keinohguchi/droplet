@@ -8,10 +8,6 @@ import (
 	"sync"
 )
 
-const (
-	prompt = "droplet"
-)
-
 var (
 	token    = flag.String("t", "", "DO APIv2 access token")
 	server   = flag.String("s", "",
