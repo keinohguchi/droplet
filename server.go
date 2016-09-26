@@ -12,6 +12,22 @@ import (
 	"github.com/digitalocean/godo"
 )
 
+type request struct {
+	cmd  string
+	args []string
+}
+
+type reply struct {
+	cmd  string
+	args []string
+	err  error
+}
+
+var (
+	requests = make(chan *request)
+	replies  = make(chan *reply)
+)
+
 type Server struct {
 	token string
 	do    *godo.Client

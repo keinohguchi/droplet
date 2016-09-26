@@ -8,17 +8,6 @@ import (
 	"sync"
 )
 
-type request struct {
-	cmd  string
-	args []string
-}
-
-type reply struct {
-	cmd  string
-	args []string
-	err  error
-}
-
 const (
 	prompt = "droplet"
 )
@@ -29,8 +18,6 @@ var (
 		"DO APIv2 server endpoint e.g. https://api.digitalocean.com")
 	inputs   = make(chan []string)
 	outputs  = make(chan []string)
-	requests = make(chan *request)
-	replies  = make(chan *reply)
 	abort    = make(chan struct{})
 )
 
