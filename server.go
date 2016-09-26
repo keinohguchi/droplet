@@ -85,7 +85,7 @@ func (s *Server) handle(req *request) {
 			replies <- &reply{cmd: req.cmd, args: req.args, err: err}
 		}()
 	case "create":
-		if len(req.args) < 1 {
+		if len(req.args) < 2 {
 			e := fmt.Errorf("server: create <name> <region>\n")
 			replies <- &reply{cmd: req.cmd, args: req.args, err: e}
 		} else {
