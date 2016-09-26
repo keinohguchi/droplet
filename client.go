@@ -17,14 +17,14 @@ func clientHandler(in io.ReadCloser, out io.Writer, n *sync.WaitGroup) {
 		args := strings.Split(input.Text(), " ")
 		switch args[0] {
 		case "quit":
-			close(inputs)
+			close(requests)
 			close(abort)
 			for range outputs {
 				// drain it!
 			}
 			return
 		default:
-			inputs <- args
+			requests <- &request{cmd: args[0], args: args[1:]}
 			lines := <-outputs
 			fmt.Fprintf(out, "%v\n", lines)
 		}
