@@ -18,7 +18,11 @@ type Server struct {
 
 func NewServer(token *string, n *sync.WaitGroup) (*Server, error) {
 	s := &Server{token: *token}
-	do, err := godo.New(oauth2.NewClient(oauth2.NoContext, s))
+	opts := []godo.ClientOpt{}
+	if *server != "" {
+		opts = append(opts, godo.SetBaseURL(*server))
+	}
+	do, err := godo.New(oauth2.NewClient(oauth2.NoContext, s), opts...)
 	if err != nil {
 		return nil, err
 	}

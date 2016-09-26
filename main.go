@@ -25,6 +25,8 @@ const (
 
 var (
 	token    = flag.String("t", "", "DO APIv2 access token")
+	server   = flag.String("s", "",
+		"DO APIv2 server endpoint e.g. https://api.digitalocean.com")
 	inputs   = make(chan []string)
 	outputs  = make(chan []string)
 	requests = make(chan *request)
