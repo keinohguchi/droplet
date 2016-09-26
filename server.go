@@ -2,6 +2,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"sync"
 
@@ -75,21 +76,41 @@ func (s *Server) handle(req *request) {
 			replies <- &reply{cmd: req.cmd, args: req.args, err: err}
 		}()
 	case "create":
-		go func() {
-			d, err := create(s)
-			if err != nil {
-				log.Print(err)
-			} else {
-				log.Printf("%v, %v\n", d.Name, d.Image.Slug)
-			}
-			replies <- &reply{cmd: req.cmd, args: req.args, err: err}
-		}()
+		if len(req.args) < 1 {
+			e := fmt.Errorf("server: create needs droplet's name\n")
+			replies <- &reply{cmd: req.cmd, args: req.args, err: e}
+		} else {
+			go func() {
+				d, err := s.create()
+				if err != nil {
+					log.Print(err)
+				} else {
+					log.Printf("%v, %v\n", d.Name, d.Image.Slug)
+				}
+				replies <- &reply{cmd: req.cmd, args: req.args, err: err}
+			}()
+		}
 	default:
 		go func() {
 			log.Print(req)
 			replies <- &reply{cmd: req.cmd, args: req.args, err: nil}
 		}()
 	}
+}
+
+func (s *Server) create() (d *godo.Droplet, err error) {
+	param := func (name string, region string, slug string) *godo.DropletCreateRequest {
+		return &godo.DropletCreateRequest{
+			Name:   name,
+			Region: region,
+			Size:   "512mb",
+			Image: godo.DropletCreateImage{
+				Slug: slug,
+			},
+		}
+	}
+	d, _, err = s.do.Droplets.Create(param("test", "sfo1", "ubuntu-14-04-x64"))
+	return d, err
 }
 
 func (s *Server) list() ([]godo.Droplet, error) {

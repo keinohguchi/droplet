@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"log"
 	"os"
 	"sync"
@@ -34,7 +35,8 @@ var (
 func main() {
 	flag.Parse()
 	if *token == "" {
-		log.Fatal("usage: droplet -t YOUR_API_TOKEN")
+		fmt.Fprintf(os.Stderr, "usage: droplet -t YOUR_API_TOKEN\n")
+		os.Exit(1)
 	}
 
 	n := &sync.WaitGroup{}
