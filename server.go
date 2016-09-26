@@ -15,24 +15,22 @@ type Server struct {
 	do    *godo.Client
 }
 
+func NewServer(token *string, n *sync.WaitGroup) (*Server, error) {
+	s := &Server{token: *token}
+	s.do = godo.NewClient(oauth2.NewClient(oauth2.NoContext, s))
+	n.Add(1)
+	go s.loop(n)
+	return s, nil
+}
+
 func (s *Server) Token() (*oauth2.Token, error) {
 	token := &oauth2.Token{AccessToken: s.token}
 	return token, nil
 }
 
-func open(token *string) (*godo.Client, error) {
-	s := Server{token: *token}
-	oauthClient := oauth2.NewClient(oauth2.NoContext, &s)
-	s.do = godo.NewClient(oauthClient)
-	return s.do, nil
-}
-
-// server goroutine waiting for the client requests channel.
-func server(token *string, n *sync.WaitGroup) {
+// loop goroutine waiting for the client requests channel.
+func (s *Server) loop(n *sync.WaitGroup) {
 	defer n.Done()
-	if _, err := open(token); err != nil {
-		log.Fatal(err)
-	}
 	for {
 		select {
 		case req, ok := <-requests:

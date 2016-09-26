@@ -47,8 +47,10 @@ func main() {
 		n.Wait()
 	}()
 
-	n.Add(1)
-	go server(token, n)
+	// server to interact with the backend
+	if _, err := NewServer(token, n); err != nil {
+		log.Fatal("main: can't create server\n")
+	}
 	n.Add(1)
 	go clientHandler(os.Stdin, os.Stdout, n)
 
