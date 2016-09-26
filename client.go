@@ -34,7 +34,7 @@ func clientHandler(in io.ReadCloser, out io.Writer, n *sync.WaitGroup) {
 				fmt.Fprintf(out, "Server disconnected\n")
 				return
 			}
-			fmt.Fprintf(out, "%v\n", reply)
+			fmt.Fprintf(out, "%s\n", reply)
 		}
 	}
 }

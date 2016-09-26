@@ -2,6 +2,7 @@
 package main
 
 import (
+	"encoding/json"
 	"fmt"
 	"log"
 	"strconv"
@@ -18,8 +19,7 @@ type request struct {
 }
 
 type reply struct {
-	cmd  string
-	args []string
+	data []byte
 	err  error
 }
 
@@ -83,11 +83,14 @@ func (s *Server) handle(req *request) {
 	switch req.cmd {
 	case "who", "whoami":
 		go func() {
+			r := &reply{}
 			acct, _, err := s.do.Account.Get()
-			if err == nil {
-				log.Print(acct)
+			if err != nil {
+				r.err = err
+			} else {
+				r.data, r.err = json.Marshal(acct)
 			}
-			replies <- &reply{cmd: req.cmd, args: req.args, err: err}
+			replies <- r
 		}()
 	case "ls", "list":
 		go func() {
@@ -98,7 +101,7 @@ func (s *Server) handle(req *request) {
 						d.ID, d.Name, d.Region.Slug, d.Image.Slug)
 				}
 			}
-			replies <- &reply{cmd: req.cmd, args: req.args, err: err}
+			replies <- &reply{data: nil, err: err}
 		}()
 	case "create":
 		go func() {
@@ -115,7 +118,7 @@ func (s *Server) handle(req *request) {
 						d.ID, d.Name, d.Region.Slug, d.Image.Slug)
 				}
 			}
-			replies <- &reply{cmd: req.cmd, args: req.args, err: err}
+			replies <- &reply{data: nil, err: err}
 		}()
 	case "info":
 		go func() {
@@ -134,7 +137,7 @@ func (s *Server) handle(req *request) {
 					}
 				}
 			}
-			replies <- &reply{cmd: req.cmd, args: req.args, err: err}
+			replies <- &reply{data: nil, err: err}
 		}()
 	case "delete", "rm":
 		go func() {
@@ -148,12 +151,13 @@ func (s *Server) handle(req *request) {
 					_, err = s.do.Droplets.Delete(i)
 				}
 			}
-			replies <- &reply{cmd: req.cmd, args: req.args, err: err}
+			replies <- &reply{data: nil, err: err}
 		}()
 	default:
 		go func() {
 			log.Print(req)
-			replies <- &reply{cmd: req.cmd, args: req.args, err: nil}
+			replies <- &reply{data: nil,
+				err: fmt.Errorf("%q not supported", req.cmd)}
 		}()
 	}
 }
