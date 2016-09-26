@@ -5,11 +5,11 @@ import (
 	"github.com/digitalocean/godo"
 )
 
-func requestParam(name string, region string, slug string) (*godo.DropletCreateRequest) {
+func requestParam(name string, region string, slug string) *godo.DropletCreateRequest {
 	return &godo.DropletCreateRequest{
-		Name: name,
+		Name:   name,
 		Region: region,
-		Size: "512mb",
+		Size:   "512mb",
 		Image: godo.DropletCreateImage{
 			Slug: slug,
 		},

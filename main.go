@@ -8,12 +8,13 @@ import (
 )
 
 type request struct {
-	cmd string
+	cmd  string
 	args []string
 }
 
 type reply struct {
 	status string
+	args   []string
 }
 
 const (
@@ -50,10 +51,16 @@ func main() {
 	for {
 		select {
 		case args := <-inputs:
-			// Just a back and forth for now :)
+			req := request{cmd: args[0], args: args[1:]}
+			go func() {
+				requests <- &req
+			}()
+		case reply := <-replies:
 			n.Add(1)
-			go clientWriter(args, n)
-		case <-replies:
+			go func() {
+				outputs <- reply.args
+				n.Done()
+			}()
 		case <-abort:
 			for range inputs {
 				// draint it!

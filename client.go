@@ -30,8 +30,3 @@ func clientHandler(in io.ReadCloser, out io.Writer, n *sync.WaitGroup) {
 		}
 	}
 }
-
-func clientWriter(args []string, n *sync.WaitGroup) {
-	defer n.Done()
-	outputs <- args
-}

@@ -19,7 +19,7 @@ func handle(c *Server, cmd string) error {
 			return err
 		}
 		for i, d := range droplets {
-			fmt.Printf("%d: %v, %v\n", i + 1, d.Name, d.Image.Slug)
+			fmt.Printf("%d: %v, %v\n", i+1, d.Name, d.Image.Slug)
 		}
 	case "create":
 		d, err := create(c)

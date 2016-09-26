@@ -41,6 +41,10 @@ func server(token *string, n *sync.WaitGroup) {
 				return
 			}
 			log.Print(req)
+			reply := reply{status: "good", args: req.args}
+			go func() {
+				replies <- &reply
+			}()
 		case <-abort:
 			log.Printf("server: aborting...\n")
 			for range requests {
