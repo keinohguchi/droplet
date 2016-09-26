@@ -4,6 +4,7 @@ package main
 import (
 	"fmt"
 	"log"
+	"strconv"
 	"sync"
 
 	"golang.org/x/oauth2"
@@ -64,9 +65,7 @@ func (s *Server) handle(req *request) {
 	case "who", "whoami":
 		go func() {
 			acct, _, err := s.do.Account.Get()
-			if err != nil {
-				log.Fatal(err)
-			} else {
+			if err == nil {
 				log.Print(acct)
 			}
 			replies <- &reply{cmd: req.cmd, args: req.args, err: err}
@@ -74,9 +73,7 @@ func (s *Server) handle(req *request) {
 	case "ls", "list":
 		go func() {
 			droplets, err := s.list()
-			if err != nil {
-				log.Fatal(err)
-			} else {
+			if err == nil {
 				for _, d := range droplets {
 					log.Printf("%d: %v, %v, %v\n",
 						d.ID, d.Name, d.Region.Slug, d.Image.Slug)
@@ -85,11 +82,11 @@ func (s *Server) handle(req *request) {
 			replies <- &reply{cmd: req.cmd, args: req.args, err: err}
 		}()
 	case "create":
-		if len(req.args) < 2 {
-			e := fmt.Errorf("server: create <name> <region>\n")
-			replies <- &reply{cmd: req.cmd, args: req.args, err: e}
-		} else {
-			go func() {
+		go func() {
+			var err error
+			if len(req.args) < 2 {
+				err = fmt.Errorf("server: create <name> <region>\n")
+			} else {
 				p := create_param(req.args[0], req.args[1])
 				d, _, err := s.do.Droplets.Create(p)
 				if err != nil {
@@ -98,9 +95,23 @@ func (s *Server) handle(req *request) {
 					log.Printf("%d, %v, %v, %v\n",
 						d.ID, d.Name, d.Region.Slug, d.Image.Slug)
 				}
-				replies <- &reply{cmd: req.cmd, args: req.args, err: err}
-			}()
-		}
+			}
+			replies <- &reply{cmd: req.cmd, args: req.args, err: err}
+		}()
+	case "delete", "rm":
+		go func() {
+			var err error
+			var i int
+			if len(req.args) < 1 {
+				err = fmt.Errorf("server: delete <droplet_id>\n")
+			} else {
+				i, err = strconv.Atoi(req.args[0])
+				if err == nil {
+					_, err = s.do.Droplets.Delete(i)
+				}
+			}
+			replies <- &reply{cmd: req.cmd, args: req.args, err: err}
+		}()
 	default:
 		go func() {
 			log.Print(req)
