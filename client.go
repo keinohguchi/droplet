@@ -19,14 +19,18 @@ func clientHandler(in io.ReadCloser, out io.Writer, n *sync.WaitGroup) {
 		case "quit":
 			close(requests)
 			close(abort)
-			for range outputs {
+			for range replies {
 				// drain it!
 			}
 			return
 		default:
 			requests <- &request{cmd: args[0], args: args[1:]}
-			lines := <-outputs
-			fmt.Fprintf(out, "%v\n", lines)
+			reply, ok := <-replies
+			if !ok {
+				fmt.Fprintf(out, "Server disconnected\n")
+				return
+			}
+			fmt.Fprintf(out, "%v\n", reply)
 		}
 	}
 }

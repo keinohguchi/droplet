@@ -56,12 +56,16 @@ func (s *Server) Token() (*oauth2.Token, error) {
 
 // loop goroutine waiting for the client requests channel.
 func (s *Server) loop(n *sync.WaitGroup) {
-	defer n.Done()
+	defer func() {
+		close(replies)
+		log.Printf("server: replies channel has been closed\n")
+		n.Done()
+	}()
 	for {
 		select {
 		case req, ok := <-requests:
 			if !ok {
-				log.Printf("server: requests channel closed\n")
+				log.Printf("server: requests channel was closed already\n")
 				return
 			}
 			s.handle(req)
@@ -70,7 +74,6 @@ func (s *Server) loop(n *sync.WaitGroup) {
 			for range requests {
 				// drain it!
 			}
-			log.Printf("server: requests channel is clean\n")
 			return
 		}
 	}

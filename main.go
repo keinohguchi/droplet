@@ -16,7 +16,6 @@ var (
 	token    = flag.String("t", "", "DO APIv2 access token")
 	server   = flag.String("s", "",
 		"DO APIv2 server endpoint e.g. https://api.digitalocean.com")
-	outputs  = make(chan []string)
 	abort    = make(chan struct{})
 )
 
@@ -29,7 +28,6 @@ func main() {
 
 	n := &sync.WaitGroup{}
 	defer func() {
-		close(outputs)
 		log.Print("Waiting for all goroutines to finish...")
 		n.Wait()
 	}()
@@ -41,23 +39,9 @@ func main() {
 	n.Add(1)
 	go clientHandler(os.Stdin, os.Stdout, n)
 
-	// main loop.
-	for {
-		select {
-		case reply, ok := <-replies:
-			if !ok {
-				log.Printf("main: replies channel has been closed\n")
-				return
-			}
-			go func() {
-				if reply.err != nil {
-					outputs <- []string{reply.err.Error()}
-				} else {
-					outputs <- reply.args
-				}
-			}()
-		case <-abort:
-			return
-		}
+	// Waiting for the abort...
+	select {
+	case <-abort:
+		return
 	}
 }
