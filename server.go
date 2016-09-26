@@ -55,7 +55,33 @@ func (s *Server) handle(req *request) {
 	case "setting":
 		go func() {
 			acct, err := setting(s)
-			log.Print(acct)
+			if err != nil {
+				log.Fatal(err)
+			} else {
+				log.Print(acct)
+			}
+			replies <- &reply{cmd: req.cmd, args: req.args, err: err}
+		}()
+	case "list":
+		go func() {
+			droplets, err := list(s)
+			if err != nil {
+				log.Fatal(err)
+			} else {
+				for i, d := range droplets {
+					log.Printf("%d: %v, %v\n", i+1, d.Name, d.Image.Slug)
+				}
+			}
+			replies <- &reply{cmd: req.cmd, args: req.args, err: err}
+		}()
+	case "create":
+		go func() {
+			d, err := create(s)
+			if err != nil {
+				log.Print(err)
+			} else {
+				log.Printf("%v, %v\n", d.Name, d.Image.Slug)
+			}
 			replies <- &reply{cmd: req.cmd, args: req.args, err: err}
 		}()
 	default:
