@@ -16,7 +16,7 @@ func requestParam(name string, region string, slug string) (*godo.DropletCreateR
 	}
 }
 
-func create(c *Client) (d *godo.Droplet, err error) {
+func create(c *Server) (d *godo.Droplet, err error) {
 	d, _, err = c.do.Droplets.Create(requestParam("test", "sfo1", "ubuntu-14-04-x64"))
 	return
 }

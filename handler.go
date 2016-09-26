@@ -5,7 +5,7 @@ import (
 	"fmt"
 )
 
-func handle(c *Client, cmd string) error {
+func handle(c *Server, cmd string) error {
 	switch cmd {
 	case "setting":
 		acct, err := setting(c)

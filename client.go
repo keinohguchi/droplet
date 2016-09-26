@@ -1,25 +1,37 @@
-// client.go
+// client
 package main
 
 import (
-	"golang.org/x/oauth2"
-
-	"github.com/digitalocean/godo"
+	"bufio"
+	"fmt"
+	"io"
+	"strings"
+	"sync"
 )
 
-type Client struct {
-	token string
-	do    *godo.Client
+func clientHandler(in io.ReadCloser, out io.Writer, n *sync.WaitGroup) {
+	defer n.Done()
+	prompt := func(w io.Writer) { fmt.Fprintf(w, "%s$ ", prompt) }
+	input := bufio.NewScanner(in)
+	for prompt(out); input.Scan(); prompt(out) {
+		args := strings.Split(input.Text(), " ")
+		switch args[0] {
+		case "quit":
+			close(inputs)
+			close(abort)
+			for range outputs {
+				// drain it!
+			}
+			return
+		default:
+			inputs <- args
+			lines := <-outputs
+			fmt.Fprintf(out, "%v\n", lines)
+		}
+	}
 }
 
-func (c *Client) Token() (*oauth2.Token, error) {
-	token := &oauth2.Token{AccessToken: c.token}
-	return token, nil
-}
-
-func (c *Client) open(token string) error {
-	c.token = token
-	oauthClient := oauth2.NewClient(oauth2.NoContext, c)
-	c.do = godo.NewClient(oauthClient)
-	return nil
+func clientWriter(args []string, n *sync.WaitGroup) {
+	defer n.Done()
+	outputs <- args
 }

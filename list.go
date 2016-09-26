@@ -5,7 +5,7 @@ import (
 	"github.com/digitalocean/godo"
 )
 
-func list(c *Client) ([]godo.Droplet, error) {
+func list(c *Server) ([]godo.Droplet, error) {
 	var droplets []godo.Droplet
 
 	opt := &godo.ListOptions{}

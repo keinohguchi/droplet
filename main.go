@@ -1,12 +1,9 @@
 package main
 
 import (
-	"bufio"
 	"flag"
-	"fmt"
-	"io"
+	"log"
 	"os"
-	"strings"
 	"sync"
 )
 
@@ -33,18 +30,21 @@ var (
 )
 
 func main() {
-	n := &sync.WaitGroup{}
-	defer n.Wait()
-
 	flag.Parse()
 	if *token == "" {
-		fmt.Fprintf(os.Stderr, "usage: droplet -t YOUR_API_TOKEN\n")
-		os.Exit(1)
+		log.Fatal("usage: droplet -t YOUR_API_TOKEN")
 	}
 
+	n := &sync.WaitGroup{}
+	defer func() {
+		log.Print("Waiting all goroutines to finish...")
+		n.Wait()
+	}()
+
 	n.Add(1)
-	go server(n)
-	go clientHandler(os.Stdin, os.Stdout)
+	go server(token, n)
+	n.Add(1)
+	go clientHandler(os.Stdin, os.Stdout, n)
 
 	// main loop.
 	for {
@@ -59,29 +59,8 @@ func main() {
 				// draint it!
 			}
 			close(requests)
+			close(outputs)
 			return
-		}
-	}
-}
-
-func clientWriter(args []string, n *sync.WaitGroup) {
-	defer n.Done()
-	outputs <- args
-}
-
-func clientHandler(in io.ReadCloser, out io.Writer) {
-	prompt := func(w io.Writer) { fmt.Fprintf(w, "%s$ ", prompt) }
-	input := bufio.NewScanner(in)
-	for prompt(out); input.Scan(); prompt(out) {
-		args := strings.Split(input.Text(), " ")
-		switch args[0] {
-		case "quit":
-			close(inputs)
-			close(abort)
-		default:
-			inputs <- args
-			lines := <-outputs
-			fmt.Fprintf(out, "%v\n", lines)
 		}
 	}
 }
