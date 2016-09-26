@@ -19,6 +19,7 @@ type request struct {
 }
 
 type reply struct {
+	cmd  string
 	data []byte
 	err  error
 }
@@ -81,83 +82,93 @@ func (s *Server) loop(n *sync.WaitGroup) {
 
 func (s *Server) handle(req *request) {
 	switch req.cmd {
-	case "who", "whoami":
+	case "account", "setting", "whoami", "who":
 		go func() {
-			r := &reply{}
+			r := &reply{cmd: "account"}
+			defer func() { replies <- r }()
+
 			acct, _, err := s.do.Account.Get()
 			if err != nil {
 				r.err = err
 			} else {
 				r.data, r.err = json.Marshal(acct)
 			}
-			replies <- r
 		}()
-	case "ls", "list":
+	case "droplets", "ls", "list":
 		go func() {
+			r := &reply{cmd: "droplets"}
+			defer func() { replies <- r }()
+
 			droplets, err := s.list()
-			if err == nil {
-				for _, d := range droplets {
-					log.Printf("%d: %v, %v, %v\n",
-						d.ID, d.Name, d.Region.Slug, d.Image.Slug)
-				}
+			if err != nil {
+				r.err = err
+			} else {
+				r.data, r.err = json.Marshal(droplets)
 			}
-			replies <- &reply{data: nil, err: err}
 		}()
 	case "create":
 		go func() {
-			var err error
+			r := &reply{cmd: "droplet"}
+			defer func() { replies <- r }()
+
 			if len(req.args) < 2 {
-				err = fmt.Errorf("server: create <name> <region>\n")
-			} else {
-				p := create_param(req.args[0], req.args[1])
-				d, _, err := s.do.Droplets.Create(p)
-				if err != nil {
-					log.Print(err)
-				} else {
-					log.Printf("%d, %v, %v, %v\n",
-						d.ID, d.Name, d.Region.Slug, d.Image.Slug)
-				}
+				r.err = fmt.Errorf("droplet <name> <region>")
+				return
 			}
-			replies <- &reply{data: nil, err: err}
+			p := create_param(req.args[0], req.args[1])
+			d, _, err := s.do.Droplets.Create(p)
+			if err != nil {
+				r.err = err
+			} else {
+				r.data, r.err = json.Marshal(d)
+			}
 		}()
-	case "info":
+	case "droplet", "info":
 		go func() {
-			var d *godo.Droplet
-			var err error
-			var i int
+			r := &reply{cmd: "droplet"}
+			defer func() { replies <- r }()
+
 			if len(req.args) < 1 {
-				err = fmt.Errorf("server: delete <droplet_id>\n")
-			} else {
-				i, err = strconv.Atoi(req.args[0])
-				if err == nil {
-					d, _, err = s.do.Droplets.Get(i)
-					if err == nil {
-						log.Printf("%d, %v, %v, %v\n",
-							d.ID, d.Name, d.Region.Slug, d.Image.Slug)
-					}
-				}
+				r.err = fmt.Errorf("server: delete <droplet_id>\n")
+				return
 			}
-			replies <- &reply{data: nil, err: err}
+			i, err := strconv.Atoi(req.args[0])
+			if err != nil {
+				r.err = err
+				return
+			}
+			d, _, err := s.do.Droplets.Get(i)
+			if err != nil {
+				r.err = err
+				return
+			}
+			r.data, r.err = json.Marshal(d)
 		}()
 	case "delete", "rm":
 		go func() {
-			var err error
-			var i int
+			r := &reply{cmd: "droplet"}
+			defer func() { replies <- r }()
+
 			if len(req.args) < 1 {
-				err = fmt.Errorf("server: delete <droplet_id>\n")
-			} else {
-				i, err = strconv.Atoi(req.args[0])
-				if err == nil {
-					_, err = s.do.Droplets.Delete(i)
-				}
+				r.err = fmt.Errorf("server: delete <droplet_id>\n")
+				return
 			}
-			replies <- &reply{data: nil, err: err}
+			i, err := strconv.Atoi(req.args[0])
+			if err != nil {
+				r.err = err
+				return
+			}
+			d, err := s.do.Droplets.Delete(i)
+			if err != nil {
+				r.err = err
+				return
+			}
+			r.data, r.err = json.Marshal(d)
 		}()
 	default:
 		go func() {
-			log.Print(req)
-			replies <- &reply{data: nil,
-				err: fmt.Errorf("%q not supported", req.cmd)}
+			replies <- &reply{cmd: req.cmd, data: nil,
+				err: fmt.Errorf("not supported", req.cmd)}
 		}()
 	}
 }
