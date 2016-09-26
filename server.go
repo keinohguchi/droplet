@@ -52,7 +52,7 @@ func (s *Server) loop(n *sync.WaitGroup) {
 
 func (s *Server) handle(req *request) {
 	switch req.cmd {
-	case "whoami":
+	case "who", "whoami":
 		go func() {
 			acct, _, err := s.do.Account.Get()
 			if err != nil {
@@ -62,9 +62,9 @@ func (s *Server) handle(req *request) {
 			}
 			replies <- &reply{cmd: req.cmd, args: req.args, err: err}
 		}()
-	case "list":
+	case "ls", "list":
 		go func() {
-			droplets, err := list(s)
+			droplets, err := s.list()
 			if err != nil {
 				log.Fatal(err)
 			} else {
@@ -90,4 +90,32 @@ func (s *Server) handle(req *request) {
 			replies <- &reply{cmd: req.cmd, args: req.args, err: nil}
 		}()
 	}
+}
+
+func (s *Server) list() ([]godo.Droplet, error) {
+	var droplets []godo.Droplet
+
+	opt := &godo.ListOptions{}
+	for {
+		dd, resp, err := s.do.Droplets.List(opt)
+		if err != nil {
+			return nil, err
+		}
+		for _, d := range dd {
+			droplets = append(droplets, d)
+		}
+
+		if resp.Links == nil || resp.Links.IsLastPage() {
+			break
+		}
+
+		page, err := resp.Links.CurrentPage()
+		if err != nil {
+			return nil, err
+		}
+
+		opt.Page = page + 1
+	}
+
+	return droplets, nil
 }
