@@ -77,9 +77,9 @@ func (s *Server) handle(req *request) {
 			if err != nil {
 				log.Fatal(err)
 			} else {
-				for i, d := range droplets {
-					log.Printf("%d: %v, %v, %v\n", i+1,
-						d.Name, d.Region.Slug, d.Image.Slug)
+				for _, d := range droplets {
+					log.Printf("%d: %v, %v, %v\n",
+						d.ID, d.Name, d.Region.Slug, d.Image.Slug)
 				}
 			}
 			replies <- &reply{cmd: req.cmd, args: req.args, err: err}
@@ -95,8 +95,8 @@ func (s *Server) handle(req *request) {
 				if err != nil {
 					log.Print(err)
 				} else {
-					log.Printf("%v, %v, %v\n",
-						d.Name, d.Region.Slug, d.Image.Slug)
+					log.Printf("%d, %v, %v, %v\n",
+						d.ID, d.Name, d.Region.Slug, d.Image.Slug)
 				}
 				replies <- &reply{cmd: req.cmd, args: req.args, err: err}
 			}()
