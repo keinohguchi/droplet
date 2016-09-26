@@ -98,6 +98,25 @@ func (s *Server) handle(req *request) {
 			}
 			replies <- &reply{cmd: req.cmd, args: req.args, err: err}
 		}()
+	case "info":
+		go func() {
+			var d *godo.Droplet
+			var err error
+			var i int
+			if len(req.args) < 1 {
+				err = fmt.Errorf("server: delete <droplet_id>\n")
+			} else {
+				i, err = strconv.Atoi(req.args[0])
+				if err == nil {
+					d, _, err = s.do.Droplets.Get(i)
+					if err == nil {
+						log.Printf("%d, %v, %v, %v\n",
+							d.ID, d.Name, d.Region.Slug, d.Image.Slug)
+					}
+				}
+			}
+			replies <- &reply{cmd: req.cmd, args: req.args, err: err}
+		}()
 	case "delete", "rm":
 		go func() {
 			var err error
