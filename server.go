@@ -52,9 +52,9 @@ func (s *Server) loop(n *sync.WaitGroup) {
 
 func (s *Server) handle(req *request) {
 	switch req.cmd {
-	case "setting":
+	case "whoami":
 		go func() {
-			acct, err := setting(s)
+			acct, _, err := s.do.Account.Get()
 			if err != nil {
 				log.Fatal(err)
 			} else {
