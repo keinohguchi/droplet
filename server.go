@@ -85,11 +85,12 @@ func (s *Server) handle(req *request) {
 		}()
 	case "create":
 		if len(req.args) < 1 {
-			e := fmt.Errorf("server: create needs droplet's name\n")
+			e := fmt.Errorf("server: create <name> <region>\n")
 			replies <- &reply{cmd: req.cmd, args: req.args, err: e}
 		} else {
 			go func() {
-				d, err := s.create()
+				p := create_param(req.args[0], req.args[1])
+				d, _, err := s.do.Droplets.Create(p)
 				if err != nil {
 					log.Print(err)
 				} else {
@@ -106,19 +107,15 @@ func (s *Server) handle(req *request) {
 	}
 }
 
-func (s *Server) create() (d *godo.Droplet, err error) {
-	param := func (name string, region string, slug string) *godo.DropletCreateRequest {
-		return &godo.DropletCreateRequest{
-			Name:   name,
-			Region: region,
-			Size:   "512mb",
-			Image: godo.DropletCreateImage{
-				Slug: slug,
-			},
-		}
+func create_param(name, region string) *godo.DropletCreateRequest {
+	return &godo.DropletCreateRequest{
+		Name:   name,
+		Region: region,
+		Size:   "512mb",
+		Image: godo.DropletCreateImage{
+			Slug: "ubuntu-14-04-x64",
+		},
 	}
-	d, _, err = s.do.Droplets.Create(param("test", "sfo1", "ubuntu-14-04-x64"))
-	return d, err
 }
 
 func (s *Server) list() ([]godo.Droplet, error) {
