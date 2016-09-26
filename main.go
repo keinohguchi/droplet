@@ -38,7 +38,12 @@ func main() {
 
 	n := &sync.WaitGroup{}
 	defer func() {
-		log.Print("Waiting all goroutines to finish...")
+		for range inputs {
+			// draint inputs channel
+		}
+		close(requests)
+		close(outputs)
+		log.Print("Waiting for all goroutines to finish...")
 		n.Wait()
 	}()
 
@@ -50,23 +55,24 @@ func main() {
 	// main loop.
 	for {
 		select {
-		case args := <-inputs:
+		case args, ok := <-inputs:
+			if !ok {
+				log.Printf("main: inputs channel has been closed\n")
+				return
+			}
 			req := request{cmd: args[0], args: args[1:]}
-			go func() {
+			go func(req request) {
 				requests <- &req
-			}()
-		case reply := <-replies:
-			n.Add(1)
+			}(req)
+		case reply, ok := <-replies:
+			if !ok {
+				log.Printf("main: replies channel has been closed\n")
+				return
+			}
 			go func() {
 				outputs <- reply.args
-				n.Done()
 			}()
 		case <-abort:
-			for range inputs {
-				// draint it!
-			}
-			close(requests)
-			close(outputs)
 			return
 		}
 	}
