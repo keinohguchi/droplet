@@ -68,26 +68,14 @@ func printReplyData(out io.Writer, r *reply) {
 			fmt.Fprintln(out, err)
 			break
 		}
-		const format = "%v\t%v\t%v\n"
-		tw := new(tabwriter.Writer).Init(out, 0, 8, 2, ' ', 0)
-		fmt.Fprintf(tw, format, "Identifier", "Droplet Name", "Region")
-		fmt.Fprintf(tw, format, "----------", "------------", "------")
-		fmt.Fprintf(tw, format, d.ID, d.Name, d.Region.Slug)
-		tw.Flush()
+		printDroplets(out, d)
 	case droplets:
 		var dd []godo.Droplet
 		if err := json.Unmarshal(r.data, &dd); err != nil {
 			fmt.Fprintln(out, err)
 			break
 		}
-		const format = "%v\t%v\t%v\n"
-		tw := new(tabwriter.Writer).Init(out, 0, 8, 2, ' ', 0)
-		fmt.Fprintf(tw, format, "Identifier", "Droplet Name", "Region")
-		fmt.Fprintf(tw, format, "----------", "------------", "------")
-		for _, d := range dd {
-			fmt.Fprintf(tw, format, d.ID, d.Name, d.Region.Slug)
-		}
-		tw.Flush()
+		printDroplets(out, dd...)
 	case httpStatus:
 		var status string
 		if err := json.Unmarshal(r.data, &status); err != nil {
@@ -99,4 +87,15 @@ func printReplyData(out io.Writer, r *reply) {
 	default:
 		fmt.Fprintf(out, "%s\n", r)
 	}
+}
+
+func printDroplets(out io.Writer, droplets ...godo.Droplet) {
+	const format = "%v\t%v\t%v\n"
+	tw := new(tabwriter.Writer).Init(out, 0, 8, 2, ' ', 0)
+	fmt.Fprintf(tw, format, "Identifier", "Droplet Name", "Region")
+	fmt.Fprintf(tw, format, "----------", "------------", "------")
+	for _, d := range droplets {
+		fmt.Fprintf(tw, format, d.ID, d.Name, d.Region.Slug)
+	}
+	tw.Flush()
 }
