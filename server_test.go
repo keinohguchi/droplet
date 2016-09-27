@@ -23,7 +23,8 @@ func TestHandle(t *testing.T) {
 	for _, tt := range tests {
 		go s.handle(tt.req)
 		got := <-replies
-		if got.err != tt.want.err &&
+		if got.dataType != tt.want.dataType &&
+			got.err != tt.want.err &&
 			fmt.Sprint(got.err) != fmt.Sprint(tt.want.err) {
 			t.Errorf("s.handle() sends %q, want %q\n",
 				got.err, tt.want.err)
