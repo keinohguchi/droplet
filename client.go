@@ -35,12 +35,12 @@ func clientHandler(in io.ReadCloser, out io.Writer, n *sync.WaitGroup) {
 			requests <- &request{cmd: args[0], args: args[1:]}
 			reply, ok := <-replies
 			if !ok {
-				fmt.Fprintf(out, "Server disconnected\n")
+				fmt.Fprintln(out, "Server disconnected")
 				return
 			}
 			if reply.err != nil {
-				fmt.Fprint(out, reply.err)
-				continue
+				fmt.Fprintln(out, reply.err)
+				break
 			}
 			printReplyData(out, reply)
 		}
@@ -52,19 +52,19 @@ func printReplyData(out io.Writer, r *reply) {
 	case account:
 		var a godo.Account
 		if err := json.Unmarshal(r.data, &a); err != nil {
-			fmt.Fprint(out, err)
+			fmt.Fprintln(out, err)
 		}
 		fmt.Fprintln(out, a.Email, a.Status, a.DropletLimit)
 	case droplet:
 		var d godo.Droplet
 		if err := json.Unmarshal(r.data, &d); err != nil {
-			fmt.Fprint(out, err)
+			fmt.Fprintln(out, err)
 		}
 		fmt.Fprintln(out, d.ID, d.Name)
 	case droplets:
 		var dd []godo.Droplet
 		if err := json.Unmarshal(r.data, &dd); err != nil {
-			fmt.Fprint(out, err)
+			fmt.Fprintln(out, err)
 		}
 		for _, d := range dd {
 			fmt.Fprintln(out, d.ID, d.Name)
@@ -72,7 +72,7 @@ func printReplyData(out io.Writer, r *reply) {
 	case httpStatus:
 		var status string
 		if err := json.Unmarshal(r.data, &status); err != nil {
-			fmt.Fprint(out, err)
+			fmt.Fprintln(out, err)
 		}
 		fmt.Fprintln(out, status)
 	case invalid:

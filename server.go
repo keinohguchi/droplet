@@ -40,8 +40,9 @@ var (
 )
 
 type Server struct {
-	*godo.Client
 	token string
+	*godo.Client
+	*sync.WaitGroup
 }
 
 func NewServer(token *string, n *sync.WaitGroup) (*Server, error) {
@@ -50,13 +51,14 @@ func NewServer(token *string, n *sync.WaitGroup) (*Server, error) {
 		opts = append(opts, godo.SetBaseURL(*server))
 	}
 	s := &Server{token: *token}
-	do, err := godo.New(oauth2.NewClient(oauth2.NoContext, s), opts...)
+	c, err := godo.New(oauth2.NewClient(oauth2.NoContext, s), opts...)
 	if err != nil {
 		return nil, err
 	}
-	s.Client = do
-	n.Add(1)
-	go s.loop(n)
+	s.Client = c
+	s.WaitGroup = n
+	s.Add(1)
+	go s.loop()
 	return s, nil
 }
 
@@ -66,17 +68,17 @@ func (s *Server) Token() (*oauth2.Token, error) {
 }
 
 // loop goroutine waiting for the client requests channel.
-func (s *Server) loop(n *sync.WaitGroup) {
+func (s *Server) loop() {
 	defer func() {
 		close(replies)
-		log.Printf("server: replies channel has been closed\n")
-		n.Done()
+		log.Printf("server: close replies channel\n")
+		s.Done()
 	}()
 	for {
 		select {
 		case req, ok := <-requests:
 			if !ok {
-				log.Printf("server: requests channel was closed already\n")
+				log.Printf("server: requests channel was closed\n")
 				return
 			}
 			s.handle(req)
@@ -215,9 +217,7 @@ func (s *Server) list() ([]godo.Droplet, error) {
 		if err != nil {
 			return nil, err
 		}
-
 		opt.Page = page + 1
 	}
-
 	return droplets, nil
 }
