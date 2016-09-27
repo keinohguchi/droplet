@@ -68,11 +68,11 @@ func printReplyData(out io.Writer, r *reply) {
 			fmt.Fprintln(out, err)
 			break
 		}
-		const format = "%v\t%v\n"
+		const format = "%v\t%-v\n"
 		tw := new(tabwriter.Writer).Init(out, 0, 8, 2, ' ', 0)
-		fmt.Fprintf(tw, format, "Name", "Droplet ID")
-		fmt.Fprintf(tw, format, "----", "----------")
-		fmt.Fprintf(tw, format, d.Name, d.ID)
+		fmt.Fprintf(tw, format, "Identifier", "Droplet Name")
+		fmt.Fprintf(tw, format, "----------", "------------")
+		fmt.Fprintf(tw, format, d.ID, d.Name)
 		tw.Flush()
 	case droplets:
 		var dd []godo.Droplet
@@ -80,12 +80,12 @@ func printReplyData(out io.Writer, r *reply) {
 			fmt.Fprintln(out, err)
 			break
 		}
-		const format = "%v\t%v\n"
+		const format = "%v\t%-v\n"
 		tw := new(tabwriter.Writer).Init(out, 0, 8, 2, ' ', 0)
-		fmt.Fprintf(tw, format, "Name", "Droplet ID")
-		fmt.Fprintf(tw, format, "----", "----------")
+		fmt.Fprintf(tw, format, "Identifier", "Droplet Name")
+		fmt.Fprintf(tw, format, "----------", "------------")
 		for _, d := range dd {
-			fmt.Fprintf(tw, format, d.Name, d.ID)
+			fmt.Fprintf(tw, format, d.ID, d.Name)
 		}
 		tw.Flush()
 	case httpStatus:
