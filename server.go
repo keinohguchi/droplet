@@ -95,17 +95,7 @@ func (s *Server) loop() {
 func (s *Server) handle(req *request) {
 	switch req.cmd {
 	case "who", "account":
-		go func() {
-			r := &reply{dataType: account}
-			defer func() { replies <- r }()
-
-			acct, _, err := s.Account.Get()
-			if err != nil {
-				r.err = err
-			} else {
-				r.data, r.err = json.Marshal(acct)
-			}
-		}()
+		go s.who(req)
 	case "add", "create":
 		go s.add(req)
 	case "del", "delete", "rm":
@@ -116,6 +106,18 @@ func (s *Server) handle(req *request) {
 		go s.list(req)
 	default:
 		go s.noop(req)
+	}
+}
+
+func (s *Server) who(req *request) {
+	r := &reply{dataType: account}
+	defer func() { replies <- r }()
+
+	acct, _, err := s.Account.Get()
+	if err != nil {
+		r.err = err
+	} else {
+		r.data, r.err = json.Marshal(acct)
 	}
 }
 
