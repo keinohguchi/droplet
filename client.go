@@ -48,6 +48,12 @@ func clientHandler(in io.ReadCloser, out io.Writer, n *sync.WaitGroup) {
 
 func printReplyData(out io.Writer, r *reply) {
 	switch r.dataType {
+	case account:
+		var a godo.Account
+		if err := json.Unmarshal(r.data, &a); err != nil {
+			fmt.Fprint(out, err)
+		}
+		fmt.Fprintln(out, a.Email, a.Status, a.DropletLimit)
 	case droplet:
 		var d godo.Droplet
 		if err := json.Unmarshal(r.data, &d); err != nil {
