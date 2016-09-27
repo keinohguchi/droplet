@@ -40,21 +40,21 @@ var (
 )
 
 type Server struct {
+	*godo.Client
 	token string
-	do    *godo.Client
 }
 
 func NewServer(token *string, n *sync.WaitGroup) (*Server, error) {
-	s := &Server{token: *token}
 	opts := []godo.ClientOpt{}
 	if *server != "" {
 		opts = append(opts, godo.SetBaseURL(*server))
 	}
+	s := &Server{token: *token}
 	do, err := godo.New(oauth2.NewClient(oauth2.NoContext, s), opts...)
 	if err != nil {
 		return nil, err
 	}
-	s.do = do
+	s.Client = do
 	n.Add(1)
 	go s.loop(n)
 	return s, nil
@@ -97,7 +97,7 @@ func (s *Server) handle(req *request) {
 			r := &reply{dataType: account}
 			defer func() { replies <- r }()
 
-			acct, _, err := s.do.Account.Get()
+			acct, _, err := s.Account.Get()
 			if err != nil {
 				r.err = err
 			} else {
@@ -126,7 +126,7 @@ func (s *Server) handle(req *request) {
 				return
 			}
 			p := create_param(req.args[0], req.args[1])
-			d, _, err := s.do.Droplets.Create(p)
+			d, _, err := s.Droplets.Create(p)
 			if err != nil {
 				r.err = err
 			} else {
@@ -147,7 +147,7 @@ func (s *Server) handle(req *request) {
 				r.err = err
 				return
 			}
-			d, _, err := s.do.Droplets.Get(i)
+			d, _, err := s.Droplets.Get(i)
 			if err != nil {
 				r.err = err
 				return
@@ -168,7 +168,7 @@ func (s *Server) handle(req *request) {
 				r.err = err
 				return
 			}
-			resp, err := s.do.Droplets.Delete(i)
+			resp, err := s.Droplets.Delete(i)
 			if err != nil {
 				r.err = err
 				return
@@ -199,7 +199,7 @@ func (s *Server) list() ([]godo.Droplet, error) {
 
 	opt := &godo.ListOptions{}
 	for {
-		dd, resp, err := s.do.Droplets.List(opt)
+		dd, resp, err := s.Droplets.List(opt)
 		if err != nil {
 			return nil, err
 		}
