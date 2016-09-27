@@ -118,7 +118,8 @@ func (s *Server) handle(req *request) {
 				r.data, r.err = json.Marshal(droplets)
 			}
 		}()
-	case "add", "create": go s.add(req)
+	case "add", "create":
+		go s.add(req)
 	case "get", "info":
 		go func() {
 			r := &reply{dataType: droplet}
