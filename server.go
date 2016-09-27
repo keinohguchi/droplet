@@ -118,23 +118,7 @@ func (s *Server) handle(req *request) {
 				r.data, r.err = json.Marshal(droplets)
 			}
 		}()
-	case "add", "create":
-		go func() {
-			r := &reply{dataType: droplet}
-			defer func() { replies <- r }()
-
-			if len(req.args) < 2 {
-				r.err = fmt.Errorf("droplet <name> <region>")
-				return
-			}
-			p := create_param(req.args[0], req.args[1])
-			d, _, err := s.Droplets.Create(p)
-			if err != nil {
-				r.err = err
-			} else {
-				r.data, r.err = json.Marshal(d)
-			}
-		}()
+	case "add", "create": go s.add(req)
 	case "get", "info":
 		go func() {
 			r := &reply{dataType: droplet}
@@ -185,14 +169,27 @@ func (s *Server) handle(req *request) {
 	}
 }
 
-func create_param(name, region string) *godo.DropletCreateRequest {
-	return &godo.DropletCreateRequest{
-		Name:   name,
-		Region: region,
+func (s *Server) add(req *request) {
+	r := &reply{dataType: droplet}
+	defer func() { replies <- r }()
+
+	if len(req.args) < 2 {
+		r.err = fmt.Errorf("droplet <name> <region>")
+		return
+	}
+	p := &godo.DropletCreateRequest{
+		Name:   req.args[0],
+		Region: req.args[1],
 		Size:   "512mb",
 		Image: godo.DropletCreateImage{
 			Slug: "ubuntu-14-04-x64",
 		},
+	}
+	d, _, err := s.Droplets.Create(p)
+	if err != nil {
+		r.err = err
+	} else {
+		r.data, r.err = json.Marshal(d)
 	}
 }
 
