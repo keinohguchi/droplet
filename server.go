@@ -156,7 +156,7 @@ func (s *Server) handle(req *request) {
 			}
 			r.data, r.err = json.Marshal(d)
 		}()
-	case "rm", "delete":
+	case "rm", "del", "delete":
 		go func() {
 			r := &reply{dataType: httpStatus}
 			defer func() { replies <- r }()
