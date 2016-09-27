@@ -115,10 +115,7 @@ func (s *Server) handle(req *request) {
 	case "list", "ls":
 		go s.list(req)
 	default:
-		go func() {
-			replies <- &reply{dataType: invalid, data: nil,
-				err: fmt.Errorf("%s not supported\n", req.cmd)}
-		}()
+		go s.noop(req)
 	}
 }
 
@@ -221,5 +218,13 @@ func (s *Server) list(req *request) {
 		r.err = err
 	} else {
 		r.data, r.err = json.Marshal(droplets)
+	}
+}
+
+func (s *Server) noop(req *request) {
+	replies <- &reply{
+		dataType: invalid,
+		data: nil,
+		err: fmt.Errorf("%q is not supported\n", req.cmd),
 	}
 }
