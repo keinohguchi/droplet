@@ -8,6 +8,7 @@ import (
 	"io"
 	"strings"
 	"sync"
+	"text/tabwriter"
 
 	"github.com/digitalocean/godo"
 )
@@ -53,22 +54,40 @@ func printReplyData(out io.Writer, r *reply) {
 		var a godo.Account
 		if err := json.Unmarshal(r.data, &a); err != nil {
 			fmt.Fprintln(out, err)
+			break
 		}
-		fmt.Fprintln(out, a.Email, a.Status, a.DropletLimit)
+		const format = "%v\t%v\t%v\n"
+		tw := new(tabwriter.Writer).Init(out, 0, 8, 2, ' ', 0)
+		fmt.Fprintf(tw, format, "E-mail", "Status", "Droplet Limit")
+		fmt.Fprintf(tw, format, "------", "------", "-------------")
+		fmt.Fprintf(tw, format, a.Email, a.Status, a.DropletLimit)
+		tw.Flush()
 	case droplet:
 		var d godo.Droplet
 		if err := json.Unmarshal(r.data, &d); err != nil {
 			fmt.Fprintln(out, err)
+			break
 		}
-		fmt.Fprintln(out, d.ID, d.Name)
+		const format = "%v\t%v\n"
+		tw := new(tabwriter.Writer).Init(out, 0, 8, 2, ' ', 0)
+		fmt.Fprintf(tw, format, "Name", "Droplet ID")
+		fmt.Fprintf(tw, format, "----", "----------")
+		fmt.Fprintf(tw, format, d.Name, d.ID)
+		tw.Flush()
 	case droplets:
 		var dd []godo.Droplet
 		if err := json.Unmarshal(r.data, &dd); err != nil {
 			fmt.Fprintln(out, err)
+			break
 		}
+		const format = "%v\t%v\n"
+		tw := new(tabwriter.Writer).Init(out, 0, 8, 2, ' ', 0)
+		fmt.Fprintf(tw, format, "Name", "Droplet ID")
+		fmt.Fprintf(tw, format, "----", "----------")
 		for _, d := range dd {
-			fmt.Fprintln(out, d.ID, d.Name)
+			fmt.Fprintf(tw, format, d.Name, d.ID)
 		}
+		tw.Flush()
 	case httpStatus:
 		var status string
 		if err := json.Unmarshal(r.data, &status); err != nil {
