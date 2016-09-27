@@ -20,6 +20,7 @@ const (
 	account
 	droplet
 	droplets
+	httpStatus
 )
 
 type request struct {
@@ -91,7 +92,7 @@ func (s *Server) loop(n *sync.WaitGroup) {
 
 func (s *Server) handle(req *request) {
 	switch req.cmd {
-	case "account", "setting", "whoami", "who":
+	case "who", "account":
 		go func() {
 			r := &reply{dataType: account}
 			defer func() { replies <- r }()
@@ -103,7 +104,7 @@ func (s *Server) handle(req *request) {
 				r.data, r.err = json.Marshal(acct)
 			}
 		}()
-	case "droplets", "ls", "list":
+	case "ls", "list":
 		go func() {
 			r := &reply{dataType: droplets}
 			defer func() { replies <- r }()
@@ -115,7 +116,7 @@ func (s *Server) handle(req *request) {
 				r.data, r.err = json.Marshal(droplets)
 			}
 		}()
-	case "create":
+	case "add", "create":
 		go func() {
 			r := &reply{dataType: droplet}
 			defer func() { replies <- r }()
@@ -132,7 +133,7 @@ func (s *Server) handle(req *request) {
 				r.data, r.err = json.Marshal(d)
 			}
 		}()
-	case "droplet", "info":
+	case "get", "info":
 		go func() {
 			r := &reply{dataType: droplet}
 			defer func() { replies <- r }()
@@ -153,9 +154,9 @@ func (s *Server) handle(req *request) {
 			}
 			r.data, r.err = json.Marshal(d)
 		}()
-	case "delete", "rm":
+	case "rm", "delete":
 		go func() {
-			r := &reply{dataType: droplet}
+			r := &reply{dataType: httpStatus}
 			defer func() { replies <- r }()
 
 			if len(req.args) < 1 {
@@ -167,17 +168,17 @@ func (s *Server) handle(req *request) {
 				r.err = err
 				return
 			}
-			d, err := s.do.Droplets.Delete(i)
+			resp, err := s.do.Droplets.Delete(i)
 			if err != nil {
 				r.err = err
 				return
 			}
-			r.data, r.err = json.Marshal(d)
+			r.data, r.err = json.Marshal(resp.Status)
 		}()
 	default:
 		go func() {
 			replies <- &reply{dataType: invalid, data: nil,
-				err: fmt.Errorf("not supported", req.cmd)}
+				err: fmt.Errorf("%s not supported\n", req.cmd)}
 		}()
 	}
 }

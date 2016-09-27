@@ -3,10 +3,13 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
 	"strings"
 	"sync"
+
+	"github.com/digitalocean/godo"
 )
 
 const (
@@ -34,17 +37,37 @@ func clientHandler(in io.ReadCloser, out io.Writer, n *sync.WaitGroup) {
 				fmt.Fprintf(out, "Server disconnected\n")
 				return
 			}
-			printReply(out, reply)
+			if reply.err != nil {
+				fmt.Fprint(out, reply.err)
+				continue
+			}
+			printReplyData(out, reply)
 		}
 	}
 }
 
-func printReply(out io.Writer, r *reply) {
-	if r.err != nil {
-		fmt.Fprint(out, r.err)
-		return
-	}
+func printReplyData(out io.Writer, r *reply) {
 	switch r.dataType {
+	case droplet:
+		var d godo.Droplet
+		if err := json.Unmarshal(r.data, &d); err != nil {
+			fmt.Fprint(out, err)
+		}
+		fmt.Fprintln(out, d.ID, d.Name)
+	case droplets:
+		var dd []godo.Droplet
+		if err := json.Unmarshal(r.data, &dd); err != nil {
+			fmt.Fprint(out, err)
+		}
+		for _, d := range dd {
+			fmt.Fprintln(out, d.ID, d.Name)
+		}
+	case httpStatus:
+		var status string
+		if err := json.Unmarshal(r.data, &status); err != nil {
+			fmt.Fprint(out, err)
+		}
+		fmt.Fprintln(out, status)
 	case invalid:
 		fmt.Fprintf(out, "%s\n", r.data)
 	default:
