@@ -56,12 +56,7 @@ func printReplyData(out io.Writer, r *reply) {
 			fmt.Fprintln(out, err)
 			break
 		}
-		const format = "%v\t%v\t%v\n"
-		tw := new(tabwriter.Writer).Init(out, 0, 8, 2, ' ', 0)
-		fmt.Fprintf(tw, format, "E-mail", "Status", "Droplet Limit")
-		fmt.Fprintf(tw, format, "------", "------", "-------------")
-		fmt.Fprintf(tw, format, a.Email, a.Status, a.DropletLimit)
-		tw.Flush()
+		printAccounts(out, a)
 	case droplet:
 		var d godo.Droplet
 		if err := json.Unmarshal(r.data, &d); err != nil {
@@ -87,6 +82,17 @@ func printReplyData(out io.Writer, r *reply) {
 	default:
 		fmt.Fprintf(out, "%s\n", r)
 	}
+}
+
+func printAccounts(out io.Writer, accounts ...godo.Account) {
+	const format = "%v\t%v\t%v\n"
+	tw := new(tabwriter.Writer).Init(out, 0, 8, 2, ' ', 0)
+	fmt.Fprintf(tw, format, "E-mail", "Status", "Droplet Limit")
+	fmt.Fprintf(tw, format, "------", "------", "-------------")
+	for _, a := range accounts {
+		fmt.Fprintf(tw, format, a.Email, a.Status, a.DropletLimit)
+	}
+	tw.Flush()
 }
 
 func printDroplets(out io.Writer, droplets ...godo.Droplet) {
