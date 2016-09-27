@@ -9,10 +9,10 @@ import (
 )
 
 var (
-	token    = flag.String("t", "", "DO APIv2 access token")
-	server   = flag.String("s", "",
+	token  = flag.String("t", "", "DO APIv2 access token")
+	server = flag.String("s", "",
 		"DO APIv2 server endpoint e.g. https://api.digitalocean.com")
-	abort    = make(chan struct{})
+	abort = make(chan struct{})
 )
 
 func main() {
