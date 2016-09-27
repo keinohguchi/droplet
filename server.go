@@ -13,15 +13,24 @@ import (
 	"github.com/digitalocean/godo"
 )
 
+type DataType int
+
+const (
+	invalid DataType = iota
+	account
+	droplet
+	droplets
+)
+
 type request struct {
 	cmd  string
 	args []string
 }
 
 type reply struct {
-	cmd  string
-	data []byte
-	err  error
+	dataType DataType
+	data     []byte
+	err      error
 }
 
 var (
@@ -84,7 +93,7 @@ func (s *Server) handle(req *request) {
 	switch req.cmd {
 	case "account", "setting", "whoami", "who":
 		go func() {
-			r := &reply{cmd: "account"}
+			r := &reply{dataType: account}
 			defer func() { replies <- r }()
 
 			acct, _, err := s.do.Account.Get()
@@ -96,7 +105,7 @@ func (s *Server) handle(req *request) {
 		}()
 	case "droplets", "ls", "list":
 		go func() {
-			r := &reply{cmd: "droplets"}
+			r := &reply{dataType: droplets}
 			defer func() { replies <- r }()
 
 			droplets, err := s.list()
@@ -108,7 +117,7 @@ func (s *Server) handle(req *request) {
 		}()
 	case "create":
 		go func() {
-			r := &reply{cmd: "droplet"}
+			r := &reply{dataType: droplet}
 			defer func() { replies <- r }()
 
 			if len(req.args) < 2 {
@@ -125,7 +134,7 @@ func (s *Server) handle(req *request) {
 		}()
 	case "droplet", "info":
 		go func() {
-			r := &reply{cmd: "droplet"}
+			r := &reply{dataType: droplet}
 			defer func() { replies <- r }()
 
 			if len(req.args) < 1 {
@@ -146,7 +155,7 @@ func (s *Server) handle(req *request) {
 		}()
 	case "delete", "rm":
 		go func() {
-			r := &reply{cmd: "droplet"}
+			r := &reply{dataType: droplet}
 			defer func() { replies <- r }()
 
 			if len(req.args) < 1 {
@@ -167,7 +176,7 @@ func (s *Server) handle(req *request) {
 		}()
 	default:
 		go func() {
-			replies <- &reply{cmd: req.cmd, data: nil,
+			replies <- &reply{dataType: invalid, data: nil,
 				err: fmt.Errorf("not supported", req.cmd)}
 		}()
 	}

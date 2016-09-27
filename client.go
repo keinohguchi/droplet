@@ -34,7 +34,20 @@ func clientHandler(in io.ReadCloser, out io.Writer, n *sync.WaitGroup) {
 				fmt.Fprintf(out, "Server disconnected\n")
 				return
 			}
-			fmt.Fprintf(out, "%s\n", reply)
+			printReply(out, reply)
 		}
+	}
+}
+
+func printReply(out io.Writer, r *reply) {
+	if r.err != nil {
+		fmt.Fprint(out, r.err)
+		return
+	}
+	switch r.dataType {
+	case invalid:
+		fmt.Fprintf(out, "%s\n", r.data)
+	default:
+		fmt.Fprintf(out, "%s\n", r)
 	}
 }
