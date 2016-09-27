@@ -34,16 +34,19 @@ type reply struct {
 	err      error
 }
 
-var (
-	requests = make(chan *request)
-	replies  = make(chan *reply)
-)
-
 type Server struct {
 	token string
 	*godo.Client
 	*sync.WaitGroup
 }
+
+type action func (s *Server, req *request)
+
+var (
+	requests = make(chan *request)
+	replies  = make(chan *reply)
+	actions  = make(map[string]action)
+)
 
 func NewServer(token *string, n *sync.WaitGroup) (*Server, error) {
 	opts := []godo.ClientOpt{}
@@ -93,23 +96,28 @@ func (s *Server) loop() {
 }
 
 func (s *Server) handle(req *request) {
-	switch req.cmd {
-	case "who", "account":
-		go s.who(req)
-	case "add", "create":
-		go s.add(req)
-	case "del", "delete", "rm":
-		go s.del(req)
-	case "get", "info":
-		go s.get(req)
-	case "list", "ls":
-		go s.list(req)
-	default:
-		go s.noop(req)
+	if a, ok := actions[req.cmd]; ok {
+		go a(s, req)
+	} else {
+		go noop(s, req)
 	}
 }
 
-func (s *Server) who(req *request) {
+func init() {
+	// action map, used in s.handle()
+	actions["who"]     = who
+	actions["account"] = who
+	actions["add"]     = add
+	actions["create"]  = add
+	actions["del"]     = del
+	actions["delete"]  = del
+	actions["get"]     = get
+	actions["info"]    = get
+	actions["list"]    = list
+	actions["ls"]      = list
+}
+
+func who(s *Server, req *request) {
 	r := &reply{dataType: account}
 	defer func() { replies <- r }()
 
@@ -121,7 +129,7 @@ func (s *Server) who(req *request) {
 	}
 }
 
-func (s *Server) add(req *request) {
+func add(s *Server, req *request) {
 	r := &reply{dataType: droplet}
 	defer func() { replies <- r }()
 
@@ -145,7 +153,7 @@ func (s *Server) add(req *request) {
 	}
 }
 
-func (s *Server) del(req *request) {
+func del(s *Server, req *request) {
 	r := &reply{dataType: httpStatus}
 	defer func() { replies <- r }()
 
@@ -166,7 +174,7 @@ func (s *Server) del(req *request) {
 	r.data, r.err = json.Marshal(resp.Status)
 }
 
-func (s *Server) get(req *request) {
+func get(s *Server, req *request) {
 	r := &reply{dataType: droplet}
 	defer func() { replies <- r }()
 
@@ -187,7 +195,7 @@ func (s *Server) get(req *request) {
 	r.data, r.err = json.Marshal(d)
 }
 
-func (s *Server) list(req *request) {
+func list(s *Server, req *request) {
 	r := &reply{dataType: droplets}
 	defer func() { replies <- r }()
 
@@ -223,7 +231,7 @@ func (s *Server) list(req *request) {
 	}
 }
 
-func (s *Server) noop(req *request) {
+func noop(s *Server, req *request) {
 	replies <- &reply{
 		dataType: invalid,
 		data:     nil,
