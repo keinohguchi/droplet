@@ -142,26 +142,7 @@ func (s *Server) handle(req *request) {
 			r.data, r.err = json.Marshal(d)
 		}()
 	case "rm", "del", "delete":
-		go func() {
-			r := &reply{dataType: httpStatus}
-			defer func() { replies <- r }()
-
-			if len(req.args) < 1 {
-				r.err = fmt.Errorf("server: delete <droplet_id>\n")
-				return
-			}
-			i, err := strconv.Atoi(req.args[0])
-			if err != nil {
-				r.err = err
-				return
-			}
-			resp, err := s.Droplets.Delete(i)
-			if err != nil {
-				r.err = err
-				return
-			}
-			r.data, r.err = json.Marshal(resp.Status)
-		}()
+		go s.del(req)
 	default:
 		go func() {
 			replies <- &reply{dataType: invalid, data: nil,
@@ -192,6 +173,27 @@ func (s *Server) add(req *request) {
 	} else {
 		r.data, r.err = json.Marshal(d)
 	}
+}
+
+func (s *Server) del(req *request) {
+	r := &reply{dataType: httpStatus}
+	defer func() { replies <- r }()
+
+	if len(req.args) < 1 {
+		r.err = fmt.Errorf("server: delete <droplet_id>\n")
+		return
+	}
+	i, err := strconv.Atoi(req.args[0])
+	if err != nil {
+		r.err = err
+		return
+	}
+	resp, err := s.Droplets.Delete(i)
+	if err != nil {
+		r.err = err
+		return
+	}
+	r.data, r.err = json.Marshal(resp.Status)
 }
 
 func (s *Server) list() ([]godo.Droplet, error) {
