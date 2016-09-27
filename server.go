@@ -40,12 +40,12 @@ type Server struct {
 	*sync.WaitGroup
 }
 
-type action func (s *Server, req *request)
+type actor func (s *Server, req *request)
 
 var (
 	requests = make(chan *request)
 	replies  = make(chan *reply)
-	actions  = make(map[string]action)
+	actors   = make(map[string]actor)
 )
 
 func NewServer(token *string, n *sync.WaitGroup) (*Server, error) {
@@ -96,7 +96,7 @@ func (s *Server) loop() {
 }
 
 func (s *Server) handle(req *request) {
-	if a, ok := actions[req.cmd]; ok {
+	if a, ok := actors[req.cmd]; ok {
 		go a(s, req)
 	} else {
 		go noop(s, req)
@@ -105,16 +105,16 @@ func (s *Server) handle(req *request) {
 
 func init() {
 	// action map, used in s.handle()
-	actions["who"]     = who
-	actions["account"] = who
-	actions["add"]     = add
-	actions["create"]  = add
-	actions["del"]     = del
-	actions["delete"]  = del
-	actions["get"]     = get
-	actions["info"]    = get
-	actions["list"]    = list
-	actions["ls"]      = list
+	actors["who"]     = who
+	actors["account"] = who
+	actors["add"]     = add
+	actors["create"]  = add
+	actors["del"]     = del
+	actors["delete"]  = del
+	actors["get"]     = get
+	actors["info"]    = get
+	actors["list"]    = list
+	actors["ls"]      = list
 }
 
 func who(s *Server, req *request) {
