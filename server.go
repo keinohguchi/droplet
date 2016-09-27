@@ -124,9 +124,9 @@ func who(s *Server, req *request) {
 	acct, _, err := s.Account.Get()
 	if err != nil {
 		r.err = err
-	} else {
-		r.data, r.err = json.Marshal(acct)
+		return
 	}
+	r.data, r.err = json.Marshal(acct)
 }
 
 func add(s *Server, req *request) {
@@ -148,9 +148,9 @@ func add(s *Server, req *request) {
 	d, _, err := s.Droplets.Create(p)
 	if err != nil {
 		r.err = err
-	} else {
-		r.data, r.err = json.Marshal(d)
+		return
 	}
+	r.data, r.err = json.Marshal(d)
 }
 
 func del(s *Server, req *request) {
@@ -226,9 +226,9 @@ func list(s *Server, req *request) {
 	}()
 	if err != nil {
 		r.err = err
-	} else {
-		r.data, r.err = json.Marshal(droplets)
+		return
 	}
+	r.data, r.err = json.Marshal(droplets)
 }
 
 func noop(s *Server, req *request) {
