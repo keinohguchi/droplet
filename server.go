@@ -224,7 +224,7 @@ func (s *Server) list(req *request) {
 func (s *Server) noop(req *request) {
 	replies <- &reply{
 		dataType: invalid,
-		data: nil,
-		err: fmt.Errorf("%q is not supported\n", req.cmd),
+		data:     nil,
+		err:      fmt.Errorf("%q is not supported\n", req.cmd),
 	}
 }
