@@ -106,43 +106,14 @@ func (s *Server) handle(req *request) {
 				r.data, r.err = json.Marshal(acct)
 			}
 		}()
-	case "ls", "list":
-		go func() {
-			r := &reply{dataType: droplets}
-			defer func() { replies <- r }()
-
-			droplets, err := s.list()
-			if err != nil {
-				r.err = err
-			} else {
-				r.data, r.err = json.Marshal(droplets)
-			}
-		}()
 	case "add", "create":
 		go s.add(req)
-	case "get", "info":
-		go func() {
-			r := &reply{dataType: droplet}
-			defer func() { replies <- r }()
-
-			if len(req.args) < 1 {
-				r.err = fmt.Errorf("server: delete <droplet_id>\n")
-				return
-			}
-			i, err := strconv.Atoi(req.args[0])
-			if err != nil {
-				r.err = err
-				return
-			}
-			d, _, err := s.Droplets.Get(i)
-			if err != nil {
-				r.err = err
-				return
-			}
-			r.data, r.err = json.Marshal(d)
-		}()
-	case "rm", "del", "delete":
+	case "del", "delete", "rm":
 		go s.del(req)
+	case "get", "info":
+		go s.get(req)
+	case "list", "ls":
+		go s.list(req)
 	default:
 		go func() {
 			replies <- &reply{dataType: invalid, data: nil,
@@ -196,28 +167,59 @@ func (s *Server) del(req *request) {
 	r.data, r.err = json.Marshal(resp.Status)
 }
 
-func (s *Server) list() ([]godo.Droplet, error) {
-	var droplets []godo.Droplet
+func (s *Server) get(req *request) {
+	r := &reply{dataType: droplet}
+	defer func() { replies <- r }()
 
-	opt := &godo.ListOptions{}
-	for {
-		dd, resp, err := s.Droplets.List(opt)
-		if err != nil {
-			return nil, err
-		}
-		for _, d := range dd {
-			droplets = append(droplets, d)
-		}
-
-		if resp.Links == nil || resp.Links.IsLastPage() {
-			break
-		}
-
-		page, err := resp.Links.CurrentPage()
-		if err != nil {
-			return nil, err
-		}
-		opt.Page = page + 1
+	if len(req.args) < 1 {
+		r.err = fmt.Errorf("server: delete <droplet_id>\n")
+		return
 	}
-	return droplets, nil
+	i, err := strconv.Atoi(req.args[0])
+	if err != nil {
+		r.err = err
+		return
+	}
+	d, _, err := s.Droplets.Get(i)
+	if err != nil {
+		r.err = err
+		return
+	}
+	r.data, r.err = json.Marshal(d)
+}
+
+func (s *Server) list(req *request) {
+	r := &reply{dataType: droplets}
+	defer func() { replies <- r }()
+
+	droplets, err := func() ([]godo.Droplet, error) {
+		var droplets []godo.Droplet
+
+		opt := &godo.ListOptions{}
+		for {
+			dd, resp, err := s.Droplets.List(opt)
+			if err != nil {
+				return nil, err
+			}
+			for _, d := range dd {
+				droplets = append(droplets, d)
+			}
+
+			if resp.Links == nil || resp.Links.IsLastPage() {
+				break
+			}
+
+			page, err := resp.Links.CurrentPage()
+			if err != nil {
+				return nil, err
+			}
+			opt.Page = page + 1
+		}
+		return droplets, nil
+	}()
+	if err != nil {
+		r.err = err
+	} else {
+		r.data, r.err = json.Marshal(droplets)
+	}
 }
