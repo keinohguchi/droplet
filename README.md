@@ -3,3 +3,5 @@
 [![Build Status](https://travis-ci.org/keinohguchi/droplet.svg)](https://travis-ci.org/keinohguchi/droplet)
 
 Simple droplet CLI, based on [godo](https://github.com/digitalocean/godo) go package.
+
+[![asciicast](https://asciinema.org/a/87345.png)](https://asciinema.org/a/87345)
