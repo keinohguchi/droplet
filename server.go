@@ -20,6 +20,7 @@ const (
 	account
 	droplet
 	droplets
+	keys
 	httpStatus
 )
 
@@ -115,6 +116,7 @@ func init() {
 	actors["info"]    = get
 	actors["list"]    = list
 	actors["ls"]      = list
+	actors["keys"]    = listKeys
 }
 
 func who(s *Server, req *request) {
@@ -229,6 +231,42 @@ func list(s *Server, req *request) {
 		return
 	}
 	r.data, r.err = json.Marshal(droplets)
+}
+
+func listKeys(s *Server, req *request) {
+	r := &reply{dataType: keys}
+	defer func() { replies <- r }()
+
+	keys, err := func() ([]godo.Key, error) {
+		var keys []godo.Key
+
+		opt := &godo.ListOptions{}
+		for {
+			kk, resp, err := s.Keys.List(opt)
+			if err != nil {
+				return nil, err
+			}
+			for _, k := range kk {
+				keys = append(keys, k)
+			}
+
+			if resp.Links == nil || resp.Links.IsLastPage() {
+				break
+			}
+
+			page, err := resp.Links.CurrentPage()
+			if err != nil {
+				return nil, err
+			}
+			opt.Page = page + 1
+		}
+		return keys, nil
+	}()
+	if err != nil {
+		r.err = err
+		return
+	}
+	r.data, r.err = json.Marshal(keys)
 }
 
 func noop(s *Server, req *request) {

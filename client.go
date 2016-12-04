@@ -71,6 +71,13 @@ func printReplyData(out io.Writer, r *reply) {
 			break
 		}
 		printDroplets(out, dd...)
+	case keys:
+		var kk []godo.Key
+		if err := json.Unmarshal(r.data, &kk); err != nil {
+			fmt.Fprintln(out, err)
+			break
+		}
+		printKeys(out, kk...)
 	case httpStatus:
 		var status string
 		if err := json.Unmarshal(r.data, &status); err != nil {
@@ -102,6 +109,17 @@ func printDroplets(out io.Writer, droplets ...godo.Droplet) {
 	fmt.Fprintf(tw, format, "----------", "------------", "------")
 	for _, d := range droplets {
 		fmt.Fprintf(tw, format, d.ID, d.Name, d.Region.Slug)
+	}
+	tw.Flush()
+}
+
+func printKeys(out io.Writer, keys ...godo.Key) {
+	const format = "%v\t%v\t%v\t%v\n"
+	tw := new(tabwriter.Writer).Init(out, 0, 8, 2, ' ', 0)
+	fmt.Fprintf(tw, format, "ID", "Name", "FingerPrint", "PublicKey")
+	fmt.Fprintf(tw, format, "--", "----", "-----------", "---------")
+	for _, k := range keys {
+		fmt.Fprintf(tw, format, k.ID, k.Name, k.Fingerprint, k.PublicKey)
 	}
 	tw.Flush()
 }
