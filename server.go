@@ -135,8 +135,8 @@ func add(s *Server, req *request) {
 	r := &reply{dataType: droplet}
 	defer func() { replies <- r }()
 
-	if len(req.args) < 2 {
-		r.err = fmt.Errorf("droplet <name> <region>")
+	if len(req.args) < 3 {
+		r.err = fmt.Errorf("droplet <name> <region> <fingerprint>")
 		return
 	}
 	p := &godo.DropletCreateRequest{
@@ -145,6 +145,11 @@ func add(s *Server, req *request) {
 		Size:   "512mb",
 		Image: godo.DropletCreateImage{
 			Slug: "ubuntu-14-04-x64",
+		},
+		SSHKeys: []godo.DropletCreateSSHKey{
+			{
+				Fingerprint: req.args[2],
+			},
 		},
 	}
 	d, _, err := s.Droplets.Create(p)
