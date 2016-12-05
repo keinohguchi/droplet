@@ -92,12 +92,13 @@ func printReplyData(out io.Writer, r *reply) {
 }
 
 func printAccounts(out io.Writer, accounts ...godo.Account) {
-	const format = "%v\t%v\t%v\n"
+	const format = "%v\t%v\t%v\t%v\t%v\n"
 	tw := new(tabwriter.Writer).Init(out, 0, 8, 2, ' ', 0)
-	fmt.Fprintf(tw, format, "E-mail", "Status", "Droplet Limit")
-	fmt.Fprintf(tw, format, "------", "------", "-------------")
+	fmt.Fprintf(tw, format, "E-mail", "Status", "Droplet Limit", "Floating IP Limit", "UUID")
+	fmt.Fprintf(tw, format, "------", "------", "-------------", "-----------------", "----")
 	for _, a := range accounts {
-		fmt.Fprintf(tw, format, a.Email, a.Status, a.DropletLimit)
+		fmt.Fprintf(tw, format, a.Email, a.Status, a.DropletLimit,
+			a.FloatingIPLimit, a.UUID)
 	}
 	tw.Flush()
 }
