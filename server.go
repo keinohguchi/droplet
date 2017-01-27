@@ -144,7 +144,7 @@ func add(s *Server, req *request) {
 		Region: req.args[1],
 		Size:   "512mb",
 		Image: godo.DropletCreateImage{
-			Slug: "ubuntu-14-04-x64",
+			Slug: "ubuntu-16-04-x64",
 		},
 		SSHKeys: []godo.DropletCreateSSHKey{
 			{
