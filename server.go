@@ -140,9 +140,11 @@ func add(s *Server, req *request) {
 		return
 	}
 	p := &godo.DropletCreateRequest{
-		Name:   req.args[0],
-		Region: req.args[1],
-		Size:   "512mb",
+		Name:              req.args[0],
+		Region:            req.args[1],
+		IPv6:              true,
+		PrivateNetworking: true,
+		Size:              "512mb",
 		Image: godo.DropletCreateImage{
 			Slug: "ubuntu-16-04-x64",
 		},
