@@ -11,6 +11,7 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/digitalocean/godo"
+	"github.com/digitalocean/godo/context"
 )
 
 type DataType int
@@ -36,6 +37,7 @@ type reply struct {
 }
 
 type Server struct {
+	ctx   context.Context
 	token string
 	*godo.Client
 	*sync.WaitGroup
@@ -49,7 +51,7 @@ var (
 	actors   = make(map[string]actor)
 )
 
-func NewServer(token *string, n *sync.WaitGroup) (*Server, error) {
+func NewServer(ctx context.Context, token *string, n *sync.WaitGroup) (*Server, error) {
 	opts := []godo.ClientOpt{}
 	if *server != "" {
 		opts = append(opts, godo.SetBaseURL(*server))
@@ -59,6 +61,7 @@ func NewServer(token *string, n *sync.WaitGroup) (*Server, error) {
 	if err != nil {
 		return nil, err
 	}
+	s.ctx = ctx
 	s.Client = c
 	s.WaitGroup = n
 	s.Add(1)
@@ -123,7 +126,7 @@ func who(s *Server, req *request) {
 	r := &reply{dataType: account}
 	defer func() { replies <- r }()
 
-	acct, _, err := s.Account.Get()
+	acct, _, err := s.Account.Get(s.ctx)
 	if err != nil {
 		r.err = err
 		return
@@ -154,7 +157,7 @@ func add(s *Server, req *request) {
 			},
 		},
 	}
-	d, _, err := s.Droplets.Create(p)
+	d, _, err := s.Droplets.Create(s.ctx, p)
 	if err != nil {
 		r.err = err
 		return
@@ -175,7 +178,7 @@ func del(s *Server, req *request) {
 		r.err = err
 		return
 	}
-	resp, err := s.Droplets.Delete(i)
+	resp, err := s.Droplets.Delete(s.ctx, i)
 	if err != nil {
 		r.err = err
 		return
@@ -196,7 +199,7 @@ func get(s *Server, req *request) {
 		r.err = err
 		return
 	}
-	d, _, err := s.Droplets.Get(i)
+	d, _, err := s.Droplets.Get(s.ctx, i)
 	if err != nil {
 		r.err = err
 		return
@@ -213,7 +216,7 @@ func list(s *Server, req *request) {
 
 		opt := &godo.ListOptions{}
 		for {
-			dd, resp, err := s.Droplets.List(opt)
+			dd, resp, err := s.Droplets.List(s.ctx, opt)
 			if err != nil {
 				return nil, err
 			}
@@ -249,7 +252,7 @@ func listKeys(s *Server, req *request) {
 
 		opt := &godo.ListOptions{}
 		for {
-			kk, resp, err := s.Keys.List(opt)
+			kk, resp, err := s.Keys.List(s.ctx, opt)
 			if err != nil {
 				return nil, err
 			}

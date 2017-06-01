@@ -6,6 +6,8 @@ import (
 	"log"
 	"os"
 	"sync"
+
+	"github.com/digitalocean/godo/context"
 )
 
 var (
@@ -29,7 +31,7 @@ func main() {
 	}()
 
 	// server to interact with the backend
-	if _, err := NewServer(token, n); err != nil {
+	if _, err := NewServer(context.Background(), token, n); err != nil {
 		log.Fatal("main: can't create server\n")
 	}
 	n.Add(1)
