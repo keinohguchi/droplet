@@ -115,6 +115,7 @@ func init() {
 	actors["create"] = add
 	actors["del"] = del
 	actors["delete"] = del
+	actors["delete-all"] = deleteAll
 	actors["get"] = get
 	actors["info"] = get
 	actors["list"] = list
@@ -182,6 +183,50 @@ func del(s *Server, req *request) {
 	if err != nil {
 		r.err = err
 		return
+	}
+	r.data, r.err = json.Marshal(resp.Status)
+}
+
+func deleteAll(s *Server, req *request) {
+	r := &reply{dataType: httpStatus}
+	defer func() { replies <- r }()
+
+	droplets, err := func() ([]godo.Droplet, error) {
+		var droplets []godo.Droplet
+
+		opt := &godo.ListOptions{}
+		for {
+			dd, resp, err := s.Droplets.List(s.ctx, opt)
+			if err != nil {
+				return nil, err
+			}
+			for _, d := range dd {
+				droplets = append(droplets, d)
+			}
+
+			if resp.Links == nil || resp.Links.IsLastPage() {
+				break
+			}
+
+			page, err := resp.Links.CurrentPage()
+			if err != nil {
+				return nil, err
+			}
+			opt.Page = page + 1
+		}
+		return droplets, nil
+	}()
+	if err != nil {
+		r.err = err
+		return
+	}
+	var resp *godo.Response
+	for _, d := range droplets {
+		resp, err = s.Droplets.Delete(s.ctx, d.ID)
+		if err != nil {
+			r.err = err
+			return
+		}
 	}
 	r.data, r.err = json.Marshal(resp.Status)
 }
