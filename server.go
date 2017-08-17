@@ -37,8 +37,9 @@ type reply struct {
 }
 
 type Server struct {
-	ctx   context.Context
-	token string
+	ctx    context.Context
+	token  string
+	finger string
 	*godo.Client
 	*sync.WaitGroup
 }
@@ -51,12 +52,12 @@ var (
 	actors   = make(map[string]actor)
 )
 
-func NewServer(ctx context.Context, token *string, n *sync.WaitGroup) (*Server, error) {
+func NewServer(ctx context.Context, token, finger *string, n *sync.WaitGroup) (*Server, error) {
 	opts := []godo.ClientOpt{}
 	if *server != "" {
 		opts = append(opts, godo.SetBaseURL(*server))
 	}
-	s := &Server{token: *token}
+	s := &Server{token: *token, finger: *finger}
 	c, err := godo.New(oauth2.NewClient(oauth2.NoContext, s), opts...)
 	if err != nil {
 		return nil, err
@@ -139,8 +140,8 @@ func add(s *Server, req *request) {
 	r := &reply{dataType: droplet}
 	defer func() { replies <- r }()
 
-	if len(req.args) < 3 {
-		r.err = fmt.Errorf("droplet <name> <region> <fingerprint>")
+	if len(req.args) < 2 {
+		r.err = fmt.Errorf("droplet <name> <region>")
 		return
 	}
 	p := &godo.DropletCreateRequest{
@@ -152,11 +153,11 @@ func add(s *Server, req *request) {
 		Image: godo.DropletCreateImage{
 			Slug: "ubuntu-16-04-x64",
 		},
-		SSHKeys: []godo.DropletCreateSSHKey{
-			{
-				Fingerprint: req.args[2],
-			},
-		},
+	}
+	if s.finger != "" {
+		p.SSHKeys = []godo.DropletCreateSSHKey{
+			{Fingerprint: s.finger},
+		}
 	}
 	d, _, err := s.Droplets.Create(s.ctx, p)
 	if err != nil {

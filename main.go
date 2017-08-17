@@ -12,6 +12,7 @@ import (
 
 var (
 	token  = flag.String("t", "", "DO APIv2 access token")
+	finger = flag.String("f", "", "SSH fingerprint")
 	server = flag.String("s", "",
 		"DO APIv2 server endpoint e.g. https://api.digitalocean.com")
 	abort = make(chan struct{})
@@ -23,7 +24,6 @@ func main() {
 		fmt.Fprintf(os.Stderr, "usage: droplet -t YOUR_API_TOKEN\n")
 		os.Exit(1)
 	}
-
 	n := &sync.WaitGroup{}
 	defer func() {
 		log.Print("Waiting for all goroutines to finish...")
@@ -31,7 +31,7 @@ func main() {
 	}()
 
 	// server to interact with the backend
-	if _, err := NewServer(context.Background(), token, n); err != nil {
+	if _, err := NewServer(context.Background(), token, finger, n); err != nil {
 		log.Fatal("main: can't create server\n")
 	}
 	n.Add(1)
