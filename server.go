@@ -25,6 +25,9 @@ const (
 	httpStatus
 )
 
+// cloud-init user data.  This will be specified through the command line.
+const defaultUserData = "#!/bin/bash\napt update && apt install -y python nmap"
+
 type request struct {
 	cmd  string
 	args []string
@@ -40,6 +43,7 @@ type Server struct {
 	ctx    context.Context
 	token  string
 	finger string
+	data   string
 	*godo.Client
 	*sync.WaitGroup
 }
@@ -57,7 +61,7 @@ func NewServer(ctx context.Context, token, finger *string, n *sync.WaitGroup) (*
 	if *server != "" {
 		opts = append(opts, godo.SetBaseURL(*server))
 	}
-	s := &Server{token: *token, finger: *finger}
+	s := &Server{token: *token, finger: *finger, data: defaultUserData}
 	c, err := godo.New(oauth2.NewClient(oauth2.NoContext, s), opts...)
 	if err != nil {
 		return nil, err
@@ -150,6 +154,7 @@ func add(s *Server, req *request) {
 		IPv6:              true,
 		PrivateNetworking: true,
 		Size:              "512mb",
+		UserData:          s.data,
 		Image: godo.DropletCreateImage{
 			Slug: "ubuntu-16-04-x64",
 		},
