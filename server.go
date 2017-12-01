@@ -26,7 +26,7 @@ const (
 )
 
 // cloud-init user data.  This will be specified through the command line.
-const defaultUserData = "#!/bin/bash\napt update && apt install -y python nmap"
+const defaultUserData = "#!/bin/bash\napt update && apt install -y python nmap vsftpd"
 
 type request struct {
 	cmd  string
