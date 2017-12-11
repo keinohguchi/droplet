@@ -21,8 +21,7 @@ var (
 func main() {
 	flag.Parse()
 	if *token == "" {
-		fmt.Fprintf(os.Stderr, "usage: droplet -t YOUR_API_TOKEN\n")
-		os.Exit(1)
+		usage()
 	}
 	n := &sync.WaitGroup{}
 	defer func() {
@@ -42,4 +41,9 @@ func main() {
 	case <-abort:
 		return
 	}
+}
+
+func usage() {
+	fmt.Fprintln(os.Stderr, "usage: droplet -t YOUR_API_KEY -f YOUR_SSH_FINGERPRINT")
+	os.Exit(1)
 }
