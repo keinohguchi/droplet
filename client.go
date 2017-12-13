@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"io"
+	"net"
 	"strings"
 	"sync"
 	"text/tabwriter"
@@ -112,10 +113,48 @@ func printDroplets(out io.Writer, droplets ...godo.Droplet) {
 		public, err := d.PublicIPv4()
 		if err != nil {
 			public = "*"
+		} else {
+			for _, ipv4 := range d.Networks.V4 {
+				if ipv4.Type != "public" {
+					continue
+				}
+				mask := net.ParseIP(ipv4.Netmask)
+				if mask == nil {
+					continue
+				}
+				mask = mask.To4()
+				if mask == nil {
+					continue
+				}
+				plen, _ := net.IPMask(mask).Size()
+				if plen == 0 {
+					continue
+				}
+				public = fmt.Sprintf("%s/%d", public, plen)
+			}
 		}
 		private, err := d.PrivateIPv4()
 		if err != nil {
 			private = "*"
+		} else {
+			for _, ipv4 := range d.Networks.V4 {
+				if ipv4.Type != "private" {
+					continue
+				}
+				mask := net.ParseIP(ipv4.Netmask)
+				if mask == nil {
+					continue
+				}
+				mask = mask.To4()
+				if mask == nil {
+					continue
+				}
+				plen, _ := net.IPMask(mask).Size()
+				if plen == 0 {
+					continue
+				}
+				private = fmt.Sprintf("%s/%d", private, plen)
+			}
 		}
 		ipv6, err := d.PublicIPv6()
 		if err != nil {
