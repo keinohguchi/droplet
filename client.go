@@ -104,12 +104,24 @@ func printAccounts(out io.Writer, accounts ...godo.Account) {
 }
 
 func printDroplets(out io.Writer, droplets ...godo.Droplet) {
-	const format = "%v\t%v\t%v\n"
+	const format = "%v\t%v\t%v\t%v\t%v\n"
 	tw := new(tabwriter.Writer).Init(out, 0, 8, 2, ' ', 0)
-	fmt.Fprintf(tw, format, "Identifier", "Droplet Name", "Region")
-	fmt.Fprintf(tw, format, "----------", "------------", "------")
+	fmt.Fprintf(tw, format, "Identifier", "Droplet Name", "IPv4(public)", "IPv4(private)", "IPv6")
+	fmt.Fprintf(tw, format, "----------", "------------", "------------", "-------------", "----")
 	for _, d := range droplets {
-		fmt.Fprintf(tw, format, d.ID, d.Name, d.Region.Slug)
+		public, err := d.PublicIPv4()
+		if err != nil {
+			public = "*"
+		}
+		private, err := d.PrivateIPv4()
+		if err != nil {
+			private = "*"
+		}
+		ipv6, err := d.PublicIPv6()
+		if err != nil {
+			ipv6 = "*"
+		}
+		fmt.Fprintf(tw, format, d.ID, d.Name, public, private, ipv6)
 	}
 	tw.Flush()
 }
