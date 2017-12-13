@@ -159,6 +159,21 @@ func printDroplets(out io.Writer, droplets ...godo.Droplet) {
 		ipv6, err := d.PublicIPv6()
 		if err != nil {
 			ipv6 = "*"
+		} else {
+			ip := net.ParseIP(ipv6)
+			if ip == nil {
+				continue
+			}
+			ip = ip.To16()
+			if ip == nil {
+				continue
+			}
+			for _, v6 := range d.Networks.V6 {
+				if v6.Type != "public" {
+					continue
+				}
+				ipv6 = fmt.Sprintf("%s/%d", ip, v6.Netmask)
+			}
 		}
 		fmt.Fprintf(tw, format, d.ID, d.Name, public, private, ipv6)
 	}
