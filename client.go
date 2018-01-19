@@ -110,74 +110,86 @@ func printDroplets(out io.Writer, droplets ...godo.Droplet) {
 	fmt.Fprintf(tw, format, "Identifier", "Droplet Name", "IPv4(public)", "IPv4(private)", "IPv6")
 	fmt.Fprintf(tw, format, "----------", "------------", "------------", "-------------", "----")
 	for _, d := range droplets {
-		public, err := d.PublicIPv4()
-		if err != nil {
-			public = "*"
-		} else {
-			for _, ipv4 := range d.Networks.V4 {
-				if ipv4.Type != "public" {
-					continue
-				}
-				mask := net.ParseIP(ipv4.Netmask)
-				if mask == nil {
-					continue
-				}
-				mask = mask.To4()
-				if mask == nil {
-					continue
-				}
-				plen, _ := net.IPMask(mask).Size()
-				if plen == 0 {
-					continue
-				}
-				public = fmt.Sprintf("%s/%d", public, plen)
-			}
-		}
-		private, err := d.PrivateIPv4()
-		if err != nil {
-			private = "*"
-		} else {
-			for _, ipv4 := range d.Networks.V4 {
-				if ipv4.Type != "private" {
-					continue
-				}
-				mask := net.ParseIP(ipv4.Netmask)
-				if mask == nil {
-					continue
-				}
-				mask = mask.To4()
-				if mask == nil {
-					continue
-				}
-				plen, _ := net.IPMask(mask).Size()
-				if plen == 0 {
-					continue
-				}
-				private = fmt.Sprintf("%s/%d", private, plen)
-			}
-		}
-		ipv6, err := d.PublicIPv6()
-		if err != nil {
-			ipv6 = "*"
-		} else {
-			ip := net.ParseIP(ipv6)
-			if ip == nil {
-				continue
-			}
-			ip = ip.To16()
-			if ip == nil {
-				continue
-			}
-			for _, v6 := range d.Networks.V6 {
-				if v6.Type != "public" {
-					continue
-				}
-				ipv6 = fmt.Sprintf("%s/%d", ip, v6.Netmask)
-			}
-		}
+		public := publicIPv4(&d)
+		private := privateIPv4(&d)
+		ipv6 := publicIPv6(&d)
 		fmt.Fprintf(tw, format, d.ID, d.Name, public, private, ipv6)
 	}
 	tw.Flush()
+}
+
+func publicIPv4(d *godo.Droplet) string {
+	public, err := d.PublicIPv4()
+	if err != nil {
+		return "*"
+	}
+	for _, ipv4 := range d.Networks.V4 {
+		if ipv4.Type != "public" {
+			continue
+		}
+		mask := net.ParseIP(ipv4.Netmask)
+		if mask == nil {
+			continue
+		}
+		mask = mask.To4()
+		if mask == nil {
+			continue
+		}
+		plen, _ := net.IPMask(mask).Size()
+		if plen == 0 {
+			continue
+		}
+		return fmt.Sprintf("%s/%d", public, plen)
+	}
+	return "*"
+}
+
+func privateIPv4(d *godo.Droplet) string {
+	private, err := d.PrivateIPv4()
+	if err != nil {
+		return "*"
+	}
+	for _, ipv4 := range d.Networks.V4 {
+		if ipv4.Type != "private" {
+			continue
+		}
+		mask := net.ParseIP(ipv4.Netmask)
+		if mask == nil {
+			continue
+		}
+		mask = mask.To4()
+		if mask == nil {
+			continue
+		}
+		plen, _ := net.IPMask(mask).Size()
+		if plen == 0 {
+			continue
+		}
+		return fmt.Sprintf("%s/%d", private, plen)
+	}
+	return "*"
+}
+
+func publicIPv6(d *godo.Droplet) string {
+	ipv6, err := d.PublicIPv6()
+	if err != nil {
+		return "*"
+	}
+	ip := net.ParseIP(ipv6)
+	if ip == nil {
+		return "*"
+	}
+	ip = ip.To16()
+	if ip == nil {
+		return "*"
+	}
+	for _, v6 := range d.Networks.V6 {
+		if v6.Type != "public" {
+			return "*"
+		}
+		return fmt.Sprintf("%s/%d", ip, v6.Netmask)
+	}
+	return "*"
 }
 
 func printKeys(out io.Writer, keys ...godo.Key) {
