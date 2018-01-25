@@ -153,7 +153,7 @@ func add(s *Server, req *request) {
 		Region:            req.args[1],
 		IPv6:              true,
 		PrivateNetworking: true,
-		Size:              "512mb",
+		Size:              "1gb",
 		UserData:          s.data,
 		Image: godo.DropletCreateImage{
 			Slug: "ubuntu-16-04-x64",
