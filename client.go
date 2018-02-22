@@ -88,7 +88,7 @@ func printReplyData(out io.Writer, r *reply) {
 	case invalid:
 		fmt.Fprintf(out, "%s\n", r.data)
 	default:
-		fmt.Fprintf(out, "%s\n", r)
+		fmt.Fprintf(out, "%#v\n", r)
 	}
 }
 
