@@ -15,12 +15,12 @@ import (
 )
 
 const (
-	prompt = "droplet> "
+	defaultPrompt = "droplet> "
 )
 
 func clientHandler(in io.ReadCloser, out io.Writer, n *sync.WaitGroup) {
 	defer n.Done()
-	prompt := func(w io.Writer) { fmt.Fprint(w, prompt) }
+	prompt := func(w io.Writer) { fmt.Fprintf(w, "%s", defaultPrompt) }
 	input := bufio.NewScanner(in)
 
 	for prompt(out); input.Scan(); prompt(out) {
