@@ -20,10 +20,10 @@ const (
 
 func clientHandler(in io.ReadCloser, out io.Writer, n *sync.WaitGroup) {
 	defer n.Done()
-	prompt := func(w io.Writer) { fmt.Fprintf(w, "%s", defaultPrompt) }
 	input := bufio.NewScanner(in)
 
-	for prompt(out); input.Scan(); prompt(out) {
+	prompter := func(w io.Writer) { fmt.Fprint(w, defaultPrompt) }
+	for prompter(out); input.Scan(); prompter(out) {
 		args := strings.Split(input.Text(), " ")
 		switch args[0] {
 		case "quit", "q":
