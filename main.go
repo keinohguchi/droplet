@@ -1,13 +1,12 @@
 package main
 
 import (
+	"context"
 	"flag"
 	"fmt"
 	"log"
 	"os"
 	"sync"
-
-	"github.com/digitalocean/godo/context"
 )
 
 var (

@@ -2,6 +2,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"log"
@@ -11,7 +12,6 @@ import (
 	"golang.org/x/oauth2"
 
 	"github.com/digitalocean/godo"
-	"github.com/digitalocean/godo/context"
 )
 
 type DataType int
